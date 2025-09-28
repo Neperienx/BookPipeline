@@ -11,11 +11,13 @@ class FieldWalker:
     Keeps filled values unless Full Edit Mode is enabled.
     """
 
+    IMPORTANT_CONTEXT_KEYS = {"setting", "themes", "magic_level"}
 
     def __init__(self, dialog: DialogRunner, full_edit_mode_var, logger: Logger):
         self.dialog = dialog
         self.full_edit_mode_var = full_edit_mode_var
         self.logger = logger
+        self._global_context: Dict[str, str] = {}
 
     def _full_edit(self) -> bool:
         try:
@@ -29,6 +31,7 @@ class FieldWalker:
         if not isinstance(prompt_data, dict):
             prompt_data = {}
         self.logger.log(f"FieldWalker.walk: start (full_edit={self._full_edit()})")
+        self._global_context = self._gather_global_context(data)
         self._walk_dict(data, prompt_data, title_key=None)
         return data
     
@@ -145,6 +148,10 @@ class FieldWalker:
             summary = summarize_value_for_prompt(value)
             if summary:
                 context[key] = summary
+        for key, summary in self._global_context.items():
+            if key == exclude_key:
+                continue
+            context.setdefault(key, summary)
         return context
 
     def _list_item_context(self, key: str, base_context: Dict[str, str], value_list: list, idx: int) -> Dict[str, str]:
@@ -159,3 +166,22 @@ class FieldWalker:
         if existing:
             item_context[f"Other {format_field_label(key)} entries"] = ", ".join(existing)
         return item_context
+
+    def _gather_global_context(self, data: Dict[str, Any]) -> Dict[str, str]:
+        found: Dict[str, str] = {}
+
+        def visit(node):
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    key_lower = key.lower()
+                    if key_lower in self.IMPORTANT_CONTEXT_KEYS:
+                        summary = summarize_value_for_prompt(value)
+                        if summary:
+                            found[key_lower] = summary
+                    visit(value)
+            elif isinstance(node, list):
+                for item in node:
+                    visit(item)
+
+        visit(data)
+        return found
