@@ -1,0 +1,17 @@
+{
+  "story_preferences": {
+    "setting": "a steam punk world",
+    "themes": [
+      "Love and mystery"
+    ],
+    "tone": "",
+    "scope": "",
+    "player_goals": []
+  },
+  "world_details": {
+    "magic_level": "low",
+    "technology_level": "",
+    "factions": [],
+    "special_requests": ""
+  }
+}
