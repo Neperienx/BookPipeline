@@ -20,6 +20,9 @@ class _FakeBatch(dict):
 class FakeTokenizer:
     """Fake tokenizer to avoid loading a real pretrained tokenizer."""
 
+    def __init__(self):
+        self.last_prompt = ""
+
     @classmethod
     def from_pretrained(cls, *_args, **_kwargs):
         # Pretend we "loaded" a tokenizer from disk
@@ -28,11 +31,22 @@ class FakeTokenizer:
     def __call__(self, prompt, return_tensors="pt"):
         # Simulates turning text into token IDs
         assert return_tensors == "pt"
+        self.last_prompt = prompt
         return _FakeBatch({"input_ids": torch.tensor([[1, 2, 3]])})
 
     def decode(self, ids, skip_special_tokens=True):
         # Simulates converting generated tokens back into text
-        return "hello world"
+        if isinstance(ids, torch.Tensor):
+            values = ids.tolist()
+        else:
+            values = list(ids)
+        if values == [1, 2, 3]:
+            return self.last_prompt
+        if values == [4, 5]:
+            return "response text"
+        if values == [1, 2, 3, 4, 5]:
+            return f"{self.last_prompt} response text"
+        return ""
 
 
 class FakeModel:
@@ -109,8 +123,8 @@ def test_generate_uses_sampling(monkeypatch):
     # Call text generation
     text = gen.generate_text("hi")
 
-    # The fake tokenizer always decodes to "hello world"
-    assert text == "hello world"
+    # The fake tokenizer returns the prompt followed by the response text
+    assert text == "hi response text"
 
     # Inspect arguments passed to FakeModel.generate()
     kwargs = gen.model.last_generate_kwargs
@@ -118,6 +132,23 @@ def test_generate_uses_sampling(monkeypatch):
     assert kwargs["do_sample"] is True       # ensures sampling mode is used
     assert kwargs["temperature"] == 0.7
     assert kwargs["top_p"] == 0.9
+
+
+def test_generate_response_excludes_prompt(monkeypatch):
+    """TextGenerator.generate_response() should omit the original prompt."""
+
+    monkeypatch.setattr(tg, "AutoModelForCausalLM",
+                        types.SimpleNamespace(from_pretrained=FakeModel.from_pretrained))
+    monkeypatch.setattr(tg, "AutoTokenizer",
+                        types.SimpleNamespace(from_pretrained=FakeTokenizer.from_pretrained))
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+
+    gen = tg.TextGenerator("dummy/path")
+
+    response = gen.generate_response("hi")
+
+    assert response == "response text"
+    assert "hi" not in response
 
 def test_real_model_generation():
     """Integration test:

@@ -27,8 +27,8 @@ class AutofillService:
         if self._stub_mode():
             return "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
         if tg is None:
-        # Fallback if text_generator isn't available
+            # Fallback if text_generator isn't available
             return "".join(random.choices(string.ascii_lowercase, k=12))
         gen = tg.TextGenerator(max_new_tokens=self.max_new_tokens)
-        out = gen.generate_text(prompt_text)
+        out = gen.generate_response(prompt_text)
         return (out or "").strip()

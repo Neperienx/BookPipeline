@@ -36,7 +36,7 @@ class TextGenerator:
         )
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
 
-    def generate_text(self, prompt: str) -> str:
+    def _generate(self, prompt: str):
         enc = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         if torch.cuda.is_available():
             torch.cuda.synchronize()
@@ -51,5 +51,18 @@ class TextGenerator:
         if torch.cuda.is_available():
             torch.cuda.synchronize()
         _elapsed = time.perf_counter() - t0
+        return enc, out
+
+    def generate_text(self, prompt: str) -> str:
+        _enc, out = self._generate(prompt)
         text = self.tokenizer.decode(out[0], skip_special_tokens=True)
         return text.strip()
+
+    def generate_response(self, prompt: str) -> str:
+        enc, out = self._generate(prompt)
+        prompt_len = enc["input_ids"].shape[-1]
+        generated_ids = out[0, prompt_len:]
+        if generated_ids.numel() == 0:
+            return ""
+        response_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+        return response_text.strip()
