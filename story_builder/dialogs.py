@@ -1,9 +1,11 @@
 from __future__ import annotations
 import tkinter as tk
 from tkinter import messagebox
-from typing import Optional
+from typing import Dict, Optional
+
 from .autofill import AutofillService
 from .logger import Logger
+from .utils import format_field_label, summarize_value_for_prompt
 
 
 class DialogRunner:
@@ -14,13 +16,23 @@ class DialogRunner:
         self.exit_early = False
 
 
-    def ask_field(self, title: str, key: str, suggestion: Optional[str], prompt_text: Optional[str] = None) -> str:
+    def ask_field(
+        self,
+        title: str,
+        key: str,
+        suggestion: Optional[str],
+        prompt_instruction: Optional[str] = None,
+        context: Optional[Dict[str, object]] = None,
+    ) -> str:
         if suggestion is None:
             suggestion = ""
 
 
         dialog = tk.Toplevel(self.root)
         dialog.title(title)
+
+        prompt_instruction = prompt_instruction or ""
+        context = context or {}
 
 
         label_text = f"{key} (current: {suggestion})"
@@ -55,7 +67,13 @@ class DialogRunner:
 
 
         def on_autofill():
-            val = self.autofill.generate(prompt_text or f"Suggest something for {key}")
+            prompt = self.build_prompt(
+                key=key,
+                current_value=entry.get().strip() or suggestion,
+                instruction=prompt_instruction,
+                context=context,
+            )
+            val = self.autofill.generate(prompt)
             entry.delete(0, tk.END)
             entry.insert(0, val)
             self.logger.log(f"ask_field AUTOFILL -> {key} = {val!r}")
@@ -73,3 +91,39 @@ class DialogRunner:
 
         dialog.wait_window()
         return result["value"] or ""
+
+    @staticmethod
+    def build_prompt(
+        key: str,
+        current_value: str,
+        instruction: str,
+        context: Optional[Dict[str, object]] = None,
+    ) -> str:
+        lines = [
+            "You are a story writing assistant and I want to build an immersive story outline.",
+        ]
+
+        context_lines = []
+        for ctx_key, ctx_value in (context or {}).items():
+            summary = summarize_value_for_prompt(ctx_value)
+            if summary:
+                context_lines.append(f"- {format_field_label(str(ctx_key))}: {summary}")
+        if context_lines:
+            lines.append("This is what I have so far:")
+            lines.extend(context_lines)
+
+        current_value = (current_value or "").strip()
+        if current_value:
+            lines.append(
+                f"For the {format_field_label(key)} I currently have: {current_value}."
+            )
+
+        instruction = (instruction or "").strip()
+        if instruction:
+            lines.append(f"In this step of the process I would like for you to {instruction}")
+        else:
+            lines.append(
+                f"In this step of the process I would like for you to suggest an update for the {format_field_label(key)}."
+            )
+
+        return "\n".join(lines)

@@ -1,7 +1,9 @@
 from __future__ import annotations
 from typing import Any, Dict
+
 from .dialogs import DialogRunner
 from .logger import Logger
+from .utils import format_field_label, summarize_value_for_prompt
 
 
 class FieldWalker:
@@ -51,15 +53,23 @@ class FieldWalker:
             if isinstance(value, dict):
                 self._walk_dict(value, p if isinstance(p, dict) else {}, title_key=key)
             elif isinstance(value, list):
-                filled = self._prompt_list(key, value, p)
+                filled = self._prompt_list(key, value, p, data)
                 data[key] = filled
             else:
-                data[key] = self._prompt_string(key, str(value), p)
+                data[key] = self._prompt_string(key, str(value), p, data)
 
 
-    def _prompt_string(self, key: str, value: str, p) -> str:
+    def _prompt_string(self, key: str, value: str, p, container: Dict[str, Any]) -> str:
         if value.strip() == "" or self._full_edit():
-            user_input = self.dialog.ask_field(self._title(key), key, value, prompt_text=p if isinstance(p, str) else "")
+            instruction = p if isinstance(p, str) else ""
+            context = self._context_snapshot(container, exclude_key=key)
+            user_input = self.dialog.ask_field(
+                self._title(key),
+                key,
+                value,
+                prompt_instruction=instruction,
+                context=context,
+            )
             self.logger.log(f"string filled -> {key} = {user_input!r}")
             return user_input or ""
         else:
@@ -67,14 +77,22 @@ class FieldWalker:
             return value
 
 
-    def _prompt_list(self, key: str, value_list: list, p) -> list:
+    def _prompt_list(self, key: str, value_list: list, p, container: Dict[str, Any]) -> list:
+        instruction = p if isinstance(p, str) else ""
+        context = self._context_snapshot(container, exclude_key=key)
         if not value_list or self._full_edit():
-            placeholder = p if isinstance(p, str) else f"Enter values for {key}, comma-separated"
-            user_input = self.dialog.ask_field(self._title(key), key, "", prompt_text=placeholder)
+            placeholder = instruction or f"Enter values for {format_field_label(key)}, comma-separated"
+            user_input = self.dialog.ask_field(
+                self._title(key),
+                key,
+                "",
+                prompt_instruction=placeholder,
+                context=context,
+            )
             new = [x.strip() for x in user_input.split(",") if x.strip()] if user_input else []
             self.logger.log(f"list fill -> {key} = {new}")
             return new
-        
+
         new_list = []
         for idx, v in enumerate(value_list):
             if self.dialog.exit_early:
@@ -83,7 +101,14 @@ class FieldWalker:
                 v = ""
             if isinstance(v, str):
                 if v.strip() == "":
-                    user_input = self.dialog.ask_field(self._title(f"{key}[{idx}]"), f"{key}[{idx}]", v, prompt_text=p if isinstance(p, str) else "")
+                    item_context = self._list_item_context(key, context, value_list, idx)
+                    user_input = self.dialog.ask_field(
+                        self._title(f"{key}[{idx}]"),
+                        f"{key}[{idx}]",
+                        v,
+                        prompt_instruction=instruction,
+                        context=item_context,
+                    )
                     self.logger.log(f"list item filled -> {key}[{idx}] = {user_input!r}")
                     new_list.append(user_input or "")
                 else:
@@ -94,11 +119,43 @@ class FieldWalker:
                 self._walk_dict(v, p if isinstance(p, dict) else {}, title_key=f"{key}[{idx}]")
                 new_list.append(v)
             else:
-                user_input = self.dialog.ask_field(self._title(f"{key}[{idx}]"), f"{key}[{idx}]", str(v), prompt_text=p if isinstance(p, str) else "")
+                item_context = self._list_item_context(key, context, value_list, idx)
+                user_input = self.dialog.ask_field(
+                    self._title(f"{key}[{idx}]"),
+                    f"{key}[{idx}]",
+                    str(v),
+                    prompt_instruction=instruction,
+                    context=item_context,
+                )
                 new_list.append(user_input or "")
                 return new_list
+
+        return new_list
 
 
     @staticmethod
     def _title(key: str) -> str:
         return f"Edit: {key}"
+
+    def _context_snapshot(self, container: Dict[str, Any], exclude_key: str) -> Dict[str, str]:
+        context: Dict[str, str] = {}
+        for key, value in container.items():
+            if key == exclude_key:
+                continue
+            summary = summarize_value_for_prompt(value)
+            if summary:
+                context[key] = summary
+        return context
+
+    def _list_item_context(self, key: str, base_context: Dict[str, str], value_list: list, idx: int) -> Dict[str, str]:
+        item_context = dict(base_context)
+        existing = []
+        for i, item in enumerate(value_list):
+            if i == idx:
+                continue
+            summary = summarize_value_for_prompt(item)
+            if summary:
+                existing.append(summary)
+        if existing:
+            item_context[f"Other {format_field_label(key)} entries"] = ", ".join(existing)
+        return item_context

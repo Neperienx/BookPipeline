@@ -5,7 +5,16 @@ class DummyDialog:
     def __init__(self, responses):
         self.responses = iter(responses)
         self.exit_early = False
-    def ask_field(self, title, key, suggestion, prompt_text=None):
+        self.captured = []
+
+    def ask_field(self, title, key, suggestion, prompt_instruction=None, context=None):
+        self.captured.append({
+            "title": title,
+            "key": key,
+            "suggestion": suggestion,
+            "prompt_instruction": prompt_instruction,
+            "context": context,
+        })
         try:
             return next(self.responses)
         except StopIteration:
@@ -26,3 +35,10 @@ def test_fieldwalker_prompts_and_fills():
 
     assert filled["story_preferences"]["setting"] == "sci-fi"
     assert filled["story_preferences"]["scope"] == "epic"
+
+    assert dialog.captured[0]["prompt_instruction"] == "genre"
+    assert dialog.captured[0]["context"] == {}
+
+    scope_call = dialog.captured[1]
+    assert scope_call["prompt_instruction"] == "scale"
+    assert scope_call["context"] == {"setting": "sci-fi"}

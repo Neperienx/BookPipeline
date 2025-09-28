@@ -38,6 +38,9 @@ def make_app(tmpdir):
     app.dialog_runner = DialogRunner(app.root, app.autofill, app.logger)
     app.field_walker = FieldWalker(app.dialog_runner, app.full_edit_mode, app.logger)
 
+    import story_builder.app as app_module
+    app_module.messagebox.showinfo = lambda *a, **k: None
+
     return app
 
 # ------------------
