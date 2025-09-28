@@ -1,5 +1,9 @@
 import types
-import torch
+
+import pytest
+
+torch = pytest.importorskip("torch")
+
 import src.text_generator as tg
 
 

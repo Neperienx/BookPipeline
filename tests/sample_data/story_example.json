@@ -1,0 +1,10 @@
+{
+  "story_preferences": {
+    "setting": "A sprawling space station on the edge of a nebula",
+    "themes": ["Exploration", "Political intrigue"],
+    "tone": ""
+  },
+  "world_details": {
+    "magic_level": "Low"
+  }
+}
