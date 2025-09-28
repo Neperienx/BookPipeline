@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Test: run once",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python -m pytest -q",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Test: watch (ptw)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/ptw -q",
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "story_preferences": {
+    "setting": "Suggest a creative setting (e.g., medieval fantasy, sci-fi, modern supernatural, or something original).",
+    "themes": "Suggest 2-3 compelling themes for an adventure (e.g., heroic adventure, dark mystery, political intrigue).",
+    "tone": "Suggest a fitting tone (serious, lighthearted, grimdark, whimsical) for the story.",
+    "scope": "Suggest whether this should be a short one-shot, episodic campaign, or long epic saga.",
+    "player_goals": "Suggest 2-3 fun player goals (e.g., solve mysteries, become powerful, build alliances)."
+  },
+  "world_details": {
+    "magic_level": "Suggest a magic level (low, medium, high) that fits the story.",
+    "technology_level": "Suggest a technology level (ancient, medieval, steampunk, futuristic) that fits the story.",
+    "factions": "Suggest 2-3 interesting factions (e.g., kingdoms, guilds, councils) that could exist in the world.",
+    "special_requests": "Suggest any unique twists, restrictions, or requests that could make the world interesting."
+  },
+  "character": {
+    "name": "Suggest a fantasy character name.",
+    "race": "Suggest a race for the character (e.g., human, elf, dwarf, or something unique).",
+    "class": "Suggest a fitting class for the character (e.g., fighter, wizard, rogue).",
+    "background": "Suggest a short backstory for the character.",
+    "motivation": "Suggest a strong motivation for the character.",
+    "personality_traits": "Suggest 2-3 personality traits for the character."
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Suggest a unique character name",
+  "race": "Suggest a fantasy race (Human, Elf, Dwarf, etc.)",
+  "class": "Suggest a character class (Warrior, Mage, Rogue, etc.)",
+  "background": "Suggest a short backstory",
+  "motivation": "Suggest what drives this character",
+  "personality_traits": "Suggest 2-3 personality traits"
+}
