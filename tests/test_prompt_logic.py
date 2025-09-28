@@ -37,7 +37,7 @@ class CaptureDialog:
 
 
 def test_fieldwalker_includes_existing_context_for_autofill():
-    data = json.loads(Path("tests/sample_data/story_example.json").read_text())
+    data = json.loads(Path("tests/sample_data/example_project/Story.json").read_text())
     prompts = {
         "story_preferences": {
             "tone": "Suggest a fitting tone (serious, lighthearted, grimdark, whimsical) for the story."
@@ -51,15 +51,17 @@ def test_fieldwalker_includes_existing_context_for_autofill():
     tone_call = next(call for call in dialog.calls if call["key"] == "tone")
     assert tone_call["prompt_instruction"].startswith("Suggest a fitting tone")
     assert tone_call["context"] == {
-        "setting": "A sprawling space station on the edge of a nebula",
-        "themes": "Exploration, Political intrigue",
+        "setting": "a steam punk world",
+        "themes": "Love and mystery",
+        "magic_level": "low",
     }
 
 
 def test_build_prompt_formats_context_and_instruction():
     context = {
-        "setting": "A sprawling space station on the edge of a nebula",
-        "themes": ["Exploration", "Political intrigue"],
+        "setting": "a steam punk world",
+        "themes": ["Love and mystery"],
+        "magic_level": "low",
     }
 
     prompt = DialogRunner.build_prompt(
@@ -71,7 +73,9 @@ def test_build_prompt_formats_context_and_instruction():
 
     assert "You are a story writing assistant" in prompt
     assert "This is what I have so far:" in prompt
-    assert "- Setting: A sprawling space station on the edge of a nebula" in prompt
-    assert "- Themes: Exploration, Political intrigue" in prompt
+    assert "- Setting: a steam punk world" in prompt
+    assert "- Themes: Love and mystery" in prompt
+    assert "- Magic level: low" in prompt
     assert "Suggest a fitting tone" in prompt
     assert "For the Tone I currently have" not in prompt
+    assert "Only provide content for the Tone" in prompt

@@ -99,6 +99,8 @@ class DialogRunner:
         instruction: str,
         context: Optional[Dict[str, object]] = None,
     ) -> str:
+        target_label = format_field_label(key)
+
         lines = [
             "You are a story writing assistant and I want to build an immersive story outline.",
         ]
@@ -115,7 +117,7 @@ class DialogRunner:
         current_value = (current_value or "").strip()
         if current_value:
             lines.append(
-                f"For the {format_field_label(key)} I currently have: {current_value}."
+                f"For the {target_label} I currently have: {current_value}."
             )
 
         instruction = (instruction or "").strip()
@@ -123,7 +125,11 @@ class DialogRunner:
             lines.append(f"In this step of the process I would like for you to {instruction}")
         else:
             lines.append(
-                f"In this step of the process I would like for you to suggest an update for the {format_field_label(key)}."
+                f"In this step of the process I would like for you to suggest an update for the {target_label}."
             )
+
+        lines.append(
+            f"Only provide content for the {target_label}; do not propose changes for any other fields."
+        )
 
         return "\n".join(lines)
