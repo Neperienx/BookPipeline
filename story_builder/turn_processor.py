@@ -75,8 +75,8 @@ class TurnProcessor:
     def process_turn(
         self,
         project_folder: str,
-        player_actions: Mapping[str, str] | None,
         gm_summary: str,
+        player_actions: Mapping[str, str] | None,
         per_player_outcomes: Mapping[str, str] | None,
         player_reflections: Mapping[str, object] | None = None,
     ) -> Dict[str, object]:

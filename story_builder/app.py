@@ -304,13 +304,46 @@ class StoryBuilderApp:
         self.dialog_runner.exit_early = False
         index = len(self.storyline_turns)
         instruction = self.storyline_manager.instruction_for_turn(index)
-        context = self.storyline_manager.build_prompt_context(project_folder, self.storyline_turns)
+        base_context = self.storyline_manager.build_prompt_context(
+            project_folder, self.storyline_turns
+        )
+
+        player_actions: dict[str, str] = {}
+        per_player_outcomes: dict[str, str] = {}
+        player_reflections: dict[str, str] = {}
+
+        players = sorted(set(self.project.list_characters(project_folder)))
+        for player in players:
+            action_context = dict(base_context)
+            action_context.update({
+                "player": player,
+                "declared_actions": dict(player_actions),
+            })
+            action = self.dialog_runner.ask_field(
+                title=f"{player} Action",
+                key=f"{player}_action_turn_{index + 1}",
+                suggestion="",
+                prompt_instruction=(
+                    f"Describe what {player} attempted during this turn."
+                ),
+                context=action_context,
+            ).strip()
+            if self.dialog_runner.exit_early:
+                self.dialog_runner.exit_early = False
+                return
+            if action:
+                player_actions[player] = action
+
+        gm_context = dict(base_context)
+        if player_actions:
+            gm_context["player_actions"] = dict(player_actions)
+
         gm_summary = self.dialog_runner.ask_field(
             title=f"Storyline Turn {index + 1}",
             key=f"turn_{index + 1}",
             suggestion="",
             prompt_instruction=instruction,
-            context=context,
+            context=gm_context,
         )
         if self.dialog_runner.exit_early:
             self.dialog_runner.exit_early = False
@@ -319,29 +352,16 @@ class StoryBuilderApp:
         if gm_summary == "":
             return
 
-        player_actions: dict[str, str] = {}
-        per_player_outcomes: dict[str, str] = {}
-        player_reflections: dict[str, str] = {}
-
-        players = sorted(set(self.project.list_characters(project_folder)))
         for player in players:
-            action = self.dialog_runner.ask_field(
-                title=f"{player} Action",
-                key=f"{player}_action_turn_{index + 1}",
-                suggestion="",
-                prompt_instruction=(
-                    f"Describe what {player} attempted during this turn."
-                ),
-                context={
-                    "gm_summary": gm_summary,
-                    "player": player,
-                },
-            ).strip()
-            if self.dialog_runner.exit_early:
-                self.dialog_runner.exit_early = False
-                return
-            if action:
-                player_actions[player] = action
+            action = player_actions.get(player, "")
+
+            outcome_context = dict(base_context)
+            outcome_context.update({
+                "gm_summary": gm_summary,
+                "player": player,
+                "player_action": action,
+                "player_actions": dict(player_actions),
+            })
 
             outcome = self.dialog_runner.ask_field(
                 title=f"{player} Outcome",
@@ -350,17 +370,18 @@ class StoryBuilderApp:
                 prompt_instruction=(
                     f"Summarize the consequences for {player} this turn."
                 ),
-                context={
-                    "gm_summary": gm_summary,
-                    "player_action": action,
-                    "player": player,
-                },
+                context=outcome_context,
             ).strip()
             if self.dialog_runner.exit_early:
                 self.dialog_runner.exit_early = False
                 return
             if outcome:
                 per_player_outcomes[player] = outcome
+
+            reflection_context = dict(outcome_context)
+            reflection_context.update({
+                "player_outcome": outcome,
+            })
 
             reflection = self.dialog_runner.ask_field(
                 title=f"{player} Reflection",
@@ -369,12 +390,7 @@ class StoryBuilderApp:
                 prompt_instruction=(
                     f"Capture {player}'s thoughts, plans, or next steps."
                 ),
-                context={
-                    "gm_summary": gm_summary,
-                    "player_action": action,
-                    "player_outcome": outcome,
-                    "player": player,
-                },
+                context=reflection_context,
             ).strip()
             if self.dialog_runner.exit_early:
                 self.dialog_runner.exit_early = False
@@ -384,10 +400,10 @@ class StoryBuilderApp:
 
         turn_result = self.turn_processor.process_turn(
             project_folder,
-            player_actions=player_actions or None,
-            gm_summary=gm_summary,
-            per_player_outcomes=per_player_outcomes or None,
-            player_reflections=player_reflections or None,
+            gm_summary,
+            player_actions or None,
+            per_player_outcomes or None,
+            player_reflections or None,
         )
 
         storyline_entry = turn_result.get("storyline_entry")
