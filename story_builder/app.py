@@ -137,6 +137,13 @@ class StoryBuilderApp:
 
         ttk.Button(
             storyline_btns,
+            text="Autofill Turn",
+            command=lambda: self._autofill_storyline_turn(project_folder),
+        ).pack(fill=tk.X, pady=5)
+
+
+        ttk.Button(
+            storyline_btns,
             text="Edit Turn",
             command=lambda: self._edit_storyline_turn(project_folder),
         ).pack(fill=tk.X, pady=5)
@@ -424,6 +431,126 @@ class StoryBuilderApp:
             impacted = ", ".join(sorted((turn_result.get("players") or {}).keys()))
             self.logger.log(
                 "storyline turn %s added (players: %s)",
+                index + 1,
+                impacted or "none",
+            )
+
+
+    def _autofill_storyline_turn(self, project_folder: str):
+        if (
+            not self.storyline_manager
+            or not self.turn_processor
+            or not self.dialog_runner
+            or not self.autofill
+        ):
+            return
+
+        index = len(self.storyline_turns)
+        instruction = self.storyline_manager.instruction_for_turn(index)
+        base_context = self.storyline_manager.build_prompt_context(
+            project_folder, self.storyline_turns
+        )
+
+        players = sorted(set(self.project.list_characters(project_folder)))
+
+        player_actions: dict[str, str] = {}
+        per_player_outcomes: dict[str, str] = {}
+        player_reflections: dict[str, str] = {}
+
+        for player in players:
+            action_context = dict(base_context)
+            action_context.update(
+                {
+                    "player": player,
+                    "declared_actions": dict(player_actions),
+                }
+            )
+            prompt = self.dialog_runner.build_prompt(
+                key=f"{player}_action_turn_{index + 1}",
+                current_value="",
+                instruction=f"Describe what {player} attempted during this turn.",
+                context=action_context,
+            )
+            action = self.autofill.generate(prompt).strip()
+            if action:
+                player_actions[player] = action
+
+        gm_context = dict(base_context)
+        if player_actions:
+            gm_context["player_actions"] = dict(player_actions)
+
+        gm_prompt = self.dialog_runner.build_prompt(
+            key=f"turn_{index + 1}",
+            current_value="",
+            instruction=instruction,
+            context=gm_context,
+        )
+        gm_summary = self.autofill.generate(gm_prompt).strip()
+        if not gm_summary:
+            return
+
+        for player in players:
+            action = player_actions.get(player, "")
+            outcome_context = dict(base_context)
+            outcome_context.update(
+                {
+                    "gm_summary": gm_summary,
+                    "player": player,
+                    "player_action": action,
+                    "player_actions": dict(player_actions),
+                }
+            )
+            outcome_prompt = self.dialog_runner.build_prompt(
+                key=f"{player}_outcome_turn_{index + 1}",
+                current_value="",
+                instruction=f"Summarize the consequences for {player} this turn.",
+                context=outcome_context,
+            )
+            outcome = self.autofill.generate(outcome_prompt).strip()
+            if outcome:
+                per_player_outcomes[player] = outcome
+
+            reflection_context = dict(outcome_context)
+            reflection_context.update({"player_outcome": outcome})
+
+            reflection_prompt = self.dialog_runner.build_prompt(
+                key=f"{player}_reflection_turn_{index + 1}",
+                current_value="",
+                instruction=f"Capture {player}'s thoughts, plans, or next steps.",
+                context=reflection_context,
+            )
+            reflection = self.autofill.generate(reflection_prompt).strip()
+            if reflection:
+                player_reflections[player] = reflection
+
+        turn_result = self.turn_processor.process_turn(
+            project_folder,
+            gm_summary,
+            player_actions or None,
+            per_player_outcomes or None,
+            player_reflections or None,
+        )
+
+        storyline_entry = turn_result.get("storyline_entry")
+        if isinstance(storyline_entry, dict):
+            self.storyline_turns.append(storyline_entry)
+            self.storyline_state = self.storyline_manager.update_turns(
+                self.storyline_state,
+                self.storyline_turns,
+            )
+            self._refresh_storyline_list()
+            if self.storyline_listbox:
+                self.storyline_listbox.selection_clear(0, tk.END)
+                last_index = self.storyline_listbox.size() - 1
+                if last_index >= 0:
+                    self.storyline_listbox.selection_set(last_index)
+
+        self._refresh_character_list(project_folder)
+
+        if self.logger:
+            impacted = ", ".join(sorted((turn_result.get("players") or {}).keys()))
+            self.logger.log(
+                "storyline turn %s autofilled (players: %s)",
                 index + 1,
                 impacted or "none",
             )
