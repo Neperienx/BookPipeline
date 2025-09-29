@@ -62,24 +62,30 @@ class StorylineManager:
         self.project.save_json(data, self.project.storyline_path(project_folder))
 
     def get_turns(self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
-        turns = []
+        turns: List[Dict[str, Any]] = []
         for turn in data.get("turns", []):
             if isinstance(turn, dict):
-                content = str(turn.get("content", "") or "")
-                origin = str(turn.get("origin", turn.get("author", "user")) or "user")
+                normalized = dict(turn)
+                normalized["content"] = str(normalized.get("content", "") or "")
+                normalized["origin"] = str(
+                    normalized.get("origin", normalized.get("author", "user")) or "user"
+                )
             else:
-                content = str(turn)
-                origin = "user"
-            turns.append({"content": content, "origin": origin})
+                normalized = {"content": str(turn), "origin": "user"}
+            turns.append(normalized)
         return turns
 
     def update_turns(self, state: Dict[str, Any], turns: List[Dict[str, Any]]) -> Dict[str, Any]:
         data = dict(state or {})
         normalized: List[Dict[str, Any]] = []
         for turn in turns:
-            content = str(turn.get("content", "") or "")
-            origin = str(turn.get("origin", "user") or "user")
-            normalized.append({"content": content, "origin": origin})
+            if isinstance(turn, dict):
+                normalized_turn = dict(turn)
+            else:
+                normalized_turn = {"content": turn}
+            normalized_turn["content"] = str(normalized_turn.get("content", "") or "")
+            normalized_turn["origin"] = str(normalized_turn.get("origin", "user") or "user")
+            normalized.append(normalized_turn)
         data["turns"] = normalized
         return data
 
