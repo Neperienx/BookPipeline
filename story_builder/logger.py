@@ -14,13 +14,25 @@ class Logger:
         except Exception:
             return False
 
-    def log(self, msg: str) -> None:
+    def log(self, msg: str, *args, **kwargs) -> None:
         if not self.enabled():
             return
-        print(msg)
+        if args:
+            try:
+                formatted = msg % args
+            except Exception:
+                formatted = str(msg)
+        elif kwargs:
+            try:
+                formatted = msg % kwargs
+            except Exception:
+                formatted = str(msg)
+        else:
+            formatted = str(msg)
+        print(formatted)
         if self.log_file:
             try:
                 with open(self.log_file, "a", encoding="utf-8") as f:
-                    f.write(str(msg) + "\n")
+                    f.write(formatted + "\n")
             except Exception:
                 pass
