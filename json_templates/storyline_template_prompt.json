@@ -1,0 +1,10 @@
+{
+  "default_instruction": "Write the next major beat of the storyline in 2-4 sentences. Focus on strong player hooks, escalating stakes, and vivid sensory details.",
+  "turn_instructions": [
+    "Establish the campaign hook, location, and initial conflict that draws the heroes together.",
+    "Introduce the primary antagonist or obstacle that complicates the heroes' goals.",
+    "Describe a turning point that raises the stakes and reveals hidden information.",
+    "Outline the climactic showdown or challenge and the consequences of success or failure.",
+    "Suggest an epilogue beat that teases future adventures or unresolved threads."
+  ]
+}

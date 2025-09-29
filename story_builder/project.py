@@ -74,6 +74,10 @@ class Project:
         return os.path.join(project_folder, "Story.json")
 
 
+    def storyline_path(self, project_folder: str) -> str:
+        return os.path.join(project_folder, "Storyline.json")
+
+
     # --- Characters ---
     def characters_dir(self, project_folder: str) -> str:
         d = os.path.join(project_folder, "Characters")

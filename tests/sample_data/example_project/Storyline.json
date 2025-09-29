@@ -1,0 +1,14 @@
+{
+  "title": "Mysteries of the Ember Vale",
+  "summary": "A conspiracy threatens the balance between the arcane conclave and the common folk.",
+  "turns": [
+    {
+      "content": "The heroes arrive in Ember Vale and witness a ritual gone awry, hinting at forbidden magic.",
+      "origin": "user"
+    },
+    {
+      "content": "An envoy of the conclave reveals that a renegade mage seeks to harness a sleeping titan beneath the valley.",
+      "origin": "user"
+    }
+  ]
+}
