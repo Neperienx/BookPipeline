@@ -12,6 +12,7 @@ from .dialogs import DialogRunner
 from .editor import FieldWalker
 from .project import ProjectPaths, Project
 from .storyline import StorylineManager
+from .turn_processor import TurnProcessor
 from .utils import sanitize_project_name
 
 class StoryBuilderApp:
@@ -27,6 +28,7 @@ class StoryBuilderApp:
         self.field_walker: FieldWalker | None = None
         self.project = Project(self.paths)
         self.storyline_manager: StorylineManager | None = None
+        self.turn_processor: TurnProcessor | None = None
         self.storyline_state: dict[str, Any] = {}
         self.storyline_turns: list[dict[str, Any]] = []
         self.storyline_listbox: tk.Listbox | None = None
@@ -76,6 +78,7 @@ class StoryBuilderApp:
         self.storyline_manager = StorylineManager(self.project, self.logger)
         self.storyline_manager.load_prompt_config()
         self.storyline_manager.ensure_initialized(project_folder)
+        self.turn_processor = TurnProcessor(self.project, self.storyline_manager, self.logger)
         self.storyline_state = {}
         self.storyline_turns = []
 
@@ -292,31 +295,122 @@ class StoryBuilderApp:
 
 
     def _add_storyline_turn(self, project_folder: str):
-        if not self.storyline_manager or not self.dialog_runner:
+        if (
+            not self.storyline_manager
+            or not self.dialog_runner
+            or not self.turn_processor
+        ):
             return
+        self.dialog_runner.exit_early = False
         index = len(self.storyline_turns)
         instruction = self.storyline_manager.instruction_for_turn(index)
         context = self.storyline_manager.build_prompt_context(project_folder, self.storyline_turns)
-        value = self.dialog_runner.ask_field(
+        gm_summary = self.dialog_runner.ask_field(
             title=f"Storyline Turn {index + 1}",
             key=f"turn_{index + 1}",
             suggestion="",
             prompt_instruction=instruction,
             context=context,
         )
-        value = value.strip()
-        if value == "":
+        if self.dialog_runner.exit_early:
+            self.dialog_runner.exit_early = False
             return
-        self.storyline_turns.append({"content": value, "origin": "user"})
-        self._persist_storyline(project_folder)
+        gm_summary = gm_summary.strip()
+        if gm_summary == "":
+            return
+
+        player_actions: dict[str, str] = {}
+        per_player_outcomes: dict[str, str] = {}
+        player_reflections: dict[str, str] = {}
+
+        players = sorted(set(self.project.list_characters(project_folder)))
+        for player in players:
+            action = self.dialog_runner.ask_field(
+                title=f"{player} Action",
+                key=f"{player}_action_turn_{index + 1}",
+                suggestion="",
+                prompt_instruction=(
+                    f"Describe what {player} attempted during this turn."
+                ),
+                context={
+                    "gm_summary": gm_summary,
+                    "player": player,
+                },
+            ).strip()
+            if self.dialog_runner.exit_early:
+                self.dialog_runner.exit_early = False
+                return
+            if action:
+                player_actions[player] = action
+
+            outcome = self.dialog_runner.ask_field(
+                title=f"{player} Outcome",
+                key=f"{player}_outcome_turn_{index + 1}",
+                suggestion="",
+                prompt_instruction=(
+                    f"Summarize the consequences for {player} this turn."
+                ),
+                context={
+                    "gm_summary": gm_summary,
+                    "player_action": action,
+                    "player": player,
+                },
+            ).strip()
+            if self.dialog_runner.exit_early:
+                self.dialog_runner.exit_early = False
+                return
+            if outcome:
+                per_player_outcomes[player] = outcome
+
+            reflection = self.dialog_runner.ask_field(
+                title=f"{player} Reflection",
+                key=f"{player}_reflection_turn_{index + 1}",
+                suggestion="",
+                prompt_instruction=(
+                    f"Capture {player}'s thoughts, plans, or next steps."
+                ),
+                context={
+                    "gm_summary": gm_summary,
+                    "player_action": action,
+                    "player_outcome": outcome,
+                    "player": player,
+                },
+            ).strip()
+            if self.dialog_runner.exit_early:
+                self.dialog_runner.exit_early = False
+                return
+            if reflection:
+                player_reflections[player] = reflection
+
+        turn_result = self.turn_processor.process_turn(
+            project_folder,
+            player_actions=player_actions or None,
+            gm_summary=gm_summary,
+            per_player_outcomes=per_player_outcomes or None,
+            player_reflections=player_reflections or None,
+        )
+
+        storyline_entry = turn_result.get("storyline_entry")
+        if storyline_entry:
+            self.storyline_turns.append(storyline_entry)
+        self.storyline_state = self.storyline_manager.update_turns(
+            self.storyline_state,
+            self.storyline_turns,
+        )
         self._refresh_storyline_list()
         if self.storyline_listbox:
             self.storyline_listbox.selection_clear(0, tk.END)
             last_index = self.storyline_listbox.size() - 1
             if last_index >= 0:
                 self.storyline_listbox.selection_set(last_index)
+        self._refresh_character_list(project_folder)
         if self.logger:
-            self.logger.log(f"storyline turn {index + 1} added")
+            impacted = ", ".join(sorted((turn_result.get("players") or {}).keys()))
+            self.logger.log(
+                "storyline turn %s added (players: %s)",
+                index + 1,
+                impacted or "none",
+            )
 
 
     def _edit_storyline_turn(self, project_folder: str):
