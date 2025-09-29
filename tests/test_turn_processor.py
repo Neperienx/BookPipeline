@@ -36,13 +36,13 @@ def test_turn_processor_writes_storyline_and_players(tmp_path):
 
     turn_result = processor.process_turn(
         project_folder,
-        player_actions={"Aria": "Study the relic", "Bram": "Guard the door"},
-        gm_summary="The relic hums as Aria studies it while Bram keeps watch.",
-        per_player_outcomes={
+        "The relic hums as Aria studies it while Bram keeps watch.",
+        {"Aria": "Study the relic", "Bram": "Guard the door"},
+        {
             "Aria": "She deciphers a hidden rune and gains new insight.",
             "Bram": "He spots approaching footsteps in time to warn the team.",
         },
-        player_reflections={
+        {
             "Aria": {
                 "notes": "Need to cross-reference rune patterns.",
                 "candidate_actions": ["Consult the archivist"],
@@ -72,10 +72,10 @@ def test_turn_processor_writes_storyline_and_players(tmp_path):
 
     processor.process_turn(
         project_folder,
-        player_actions={"Aria": "Lead the team toward the footsteps"},
-        gm_summary="The party advances carefully into the corridor.",
-        per_player_outcomes={"Bram": "He points out a tripwire before anyone triggers it."},
-        player_reflections={"Aria": {"thoughts": "Need backup soon.", "plans": "Find allies"}},
+        "The party advances carefully into the corridor.",
+        {"Aria": "Lead the team toward the footsteps"},
+        {"Bram": "He points out a tripwire before anyone triggers it."},
+        {"Aria": {"thoughts": "Need backup soon.", "plans": "Find allies"}},
     )
 
     aria = project.read_json(aria_file)
