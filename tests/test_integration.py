@@ -6,6 +6,8 @@ import pytest
 
 from story_builder.app import StoryBuilderApp
 from story_builder.project import ProjectPaths
+from story_builder.storyline import StorylineManager
+from story_builder.turn_processor import TurnProcessor
 
 # ------------------
 # Helpers
@@ -133,5 +135,79 @@ def test_edit_character_manual_and_autofill():
         data = json.load(f)
 
     assert data["name"] == "heroic" or data["role"] == "WXYZ"
+
+    shutil.rmtree(tmpdir)
+
+
+def test_autofill_storyline_turn():
+    tmpdir = tempfile.mkdtemp()
+    app = make_app(tmpdir)
+    folder = app.paths.project_folder("test_project")
+    os.makedirs(app.project.characters_dir(folder), exist_ok=True)
+
+    # Create template files
+    story_path = app.project.story_path(folder)
+    app.project.save_json({"title": "", "summary": ""}, story_path)
+
+    # Create characters
+    app.project.save_json({}, app.project.character_path(folder, "Hero"))
+    app.project.save_json({}, app.project.character_path(folder, "Villain"))
+
+    app.storyline_manager = StorylineManager(app.project, app.logger)
+    app.storyline_manager.ensure_initialized(folder)
+    app.storyline_manager.load_prompt_config()
+    app.turn_processor = TurnProcessor(app.project, app.storyline_manager, app.logger)
+
+    app.storyline_state = app.storyline_manager.load(folder)
+    app.storyline_turns = app.storyline_manager.get_turns(app.storyline_state)
+
+    class DummyListbox:
+        def delete(self, *args, **kwargs):
+            pass
+
+        def insert(self, *args, **kwargs):
+            pass
+
+        def selection_clear(self, *args, **kwargs):
+            pass
+
+        def selection_set(self, *args, **kwargs):
+            pass
+
+        def size(self):
+            return 0
+
+    app.storyline_listbox = DummyListbox()
+    app.listbox = DummyListbox()
+
+    responses = iter([
+        "Hero action",
+        "Villain action",
+        "GM summary",
+        "Hero outcome",
+        "Hero reflection",
+        "Villain outcome",
+        "Villain reflection",
+    ])
+    app.autofill.generate = lambda prompt: next(responses)
+
+    app._autofill_storyline_turn(folder)
+
+    storyline_path = app.project.storyline_path(folder)
+    with open(storyline_path, "r", encoding="utf-8") as f:
+        storyline_data = json.load(f)
+
+    assert len(storyline_data.get("turns", [])) == 1
+    turn_entry = storyline_data["turns"][0]
+    assert turn_entry["content"] == "GM summary"
+    assert turn_entry["player_actions"]["Hero"] == "Hero action"
+    assert turn_entry["per_player_outcomes"]["Villain"] == "Villain outcome"
+
+    hero_path = app.project.character_path(folder, "Hero")
+    with open(hero_path, "r", encoding="utf-8") as f:
+        hero_data = json.load(f)
+
+    assert hero_data["turns"][0]["action"] == "Hero action"
+    assert hero_data["turns"][0]["reflection"] == "Hero reflection"
 
     shutil.rmtree(tmpdir)
