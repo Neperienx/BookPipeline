@@ -1,15 +1,15 @@
 {
   "name": {
     "instruction": "Suggest a unique character name",
-    "max_tokens": 32
+    "max_tokens": 132
   },
   "race": {
     "instruction": "Suggest a fantasy race (Human, Elf, Dwarf, etc.)",
-    "max_tokens": 48
+    "max_tokens": 148
   },
   "class": {
     "instruction": "Suggest a character class (Warrior, Mage, Rogue, etc.)",
-    "max_tokens": 48
+    "max_tokens": 148
   },
   "background": {
     "instruction": "Suggest a short backstory",
@@ -17,10 +17,10 @@
   },
   "motivation": {
     "instruction": "Suggest what drives this character",
-    "max_tokens": 72
+    "max_tokens": 172
   },
   "personality_traits": {
     "instruction": "Suggest 2-3 personality traits",
-    "max_tokens": 72
+    "max_tokens": 172
   }
 }

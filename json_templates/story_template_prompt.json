@@ -2,55 +2,55 @@
   "story_preferences": {
     "setting": {
       "instruction": "Suggest a creative setting (e.g., medieval fantasy, sci-fi, modern supernatural, or something original).",
-      "max_tokens": 80
+      "max_tokens": 180
     },
     "themes": {
       "instruction": "Suggest 2-3 compelling themes for an adventure (e.g., heroic adventure, dark mystery, political intrigue).",
-      "max_tokens": 80
+      "max_tokens": 180
     },
     "tone": {
       "instruction": "Suggest a fitting tone (serious, lighthearted, grimdark, whimsical) for the story.",
-      "max_tokens": 48
+      "max_tokens": 148
     },
     "scope": {
       "instruction": "Suggest whether this should be a short one-shot, episodic campaign, or long epic saga.",
-      "max_tokens": 48
+      "max_tokens": 148
     },
     "player_goals": {
       "instruction": "Suggest 2-3 fun player goals (e.g., solve mysteries, become powerful, build alliances).",
-      "max_tokens": 80
+      "max_tokens": 180
     }
   },
   "world_details": {
     "magic_level": {
       "instruction": "Suggest a magic level (low, medium, high) that fits the story.",
-      "max_tokens": 48
+      "max_tokens": 148
     },
     "technology_level": {
       "instruction": "Suggest a technology level (ancient, medieval, steampunk, futuristic) that fits the story.",
-      "max_tokens": 48
+      "max_tokens": 148
     },
     "factions": {
       "instruction": "Suggest 2-3 interesting factions (e.g., kingdoms, guilds, councils) that could exist in the world.",
-      "max_tokens": 96
+      "max_tokens": 196
     },
     "special_requests": {
       "instruction": "Suggest any unique twists, restrictions, or requests that could make the world interesting.",
-      "max_tokens": 96
+      "max_tokens": 196
     }
   },
   "character": {
     "name": {
       "instruction": "Suggest a fantasy character name.",
-      "max_tokens": 32
+      "max_tokens": 132
     },
     "race": {
       "instruction": "Suggest a race for the character (e.g., human, elf, dwarf, or something unique).",
-      "max_tokens": 48
+      "max_tokens": 148
     },
     "class": {
       "instruction": "Suggest a fitting class for the character (e.g., fighter, wizard, rogue).",
-      "max_tokens": 48
+      "max_tokens": 148
     },
     "background": {
       "instruction": "Suggest a short backstory for the character.",
@@ -58,11 +58,11 @@
     },
     "motivation": {
       "instruction": "Suggest a strong motivation for the character.",
-      "max_tokens": 72
+      "max_tokens": 172
     },
     "personality_traits": {
       "instruction": "Suggest 2-3 personality traits for the character.",
-      "max_tokens": 72
+      "max_tokens": 172
     }
   }
 }

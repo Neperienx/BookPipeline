@@ -1,10 +1,8 @@
 {
   "story_preferences": {
-    "setting": "test",
-    "themes": [
-      "test"
-    ],
-    "tone": "Tone: Whimsical\n\nIn a mystical land of vibrant colors and enchanted beings, the young and adventurous Luna embarks on a journey to uncover the secret of the Moonflower,",
+    "setting": "",
+    "themes": [],
+    "tone": "",
     "scope": "",
     "player_goals": []
   },
