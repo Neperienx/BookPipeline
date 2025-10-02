@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime
 from typing import Any
 
 import tkinter as tk
@@ -14,6 +15,7 @@ from .project import ProjectPaths, Project
 from .storyline import StorylineManager
 from .turn_processor import TurnProcessor
 from .utils import sanitize_project_name
+from .story_writer import StoryWriter
 
 class StoryBuilderApp:
     def __init__(self):
@@ -32,6 +34,8 @@ class StoryBuilderApp:
         self.storyline_state: dict[str, Any] = {}
         self.storyline_turns: list[dict[str, Any]] = []
         self.storyline_listbox: tk.Listbox | None = None
+        self.story_folder_var: tk.StringVar | None = None
+        self.story_folder_display_var: tk.StringVar | None = None
 
     # --- App lifecycle ---
     def run(self):
@@ -81,6 +85,9 @@ class StoryBuilderApp:
         self.turn_processor = TurnProcessor(self.project, self.storyline_manager, self.logger)
         self.storyline_state = {}
         self.storyline_turns = []
+        self.story_folder_var = tk.StringVar(value="")
+        self.story_folder_display_var = tk.StringVar(value="(not set)")
+        self.project.story_output_dir(project_folder)
 
 
         # Notebook UI
@@ -120,11 +127,15 @@ class StoryBuilderApp:
         notebook.add(frame_storyline, text="Write Storyline")
 
 
-        self.storyline_listbox = tk.Listbox(frame_storyline)
+        storyline_content = ttk.Frame(frame_storyline)
+        storyline_content.pack(fill=tk.BOTH, expand=True)
+
+
+        self.storyline_listbox = tk.Listbox(storyline_content)
         self.storyline_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
 
 
-        storyline_btns = ttk.Frame(frame_storyline)
+        storyline_btns = ttk.Frame(storyline_content)
         storyline_btns.pack(side=tk.RIGHT, fill=tk.Y, padx=10, pady=10)
 
 
@@ -168,6 +179,34 @@ class StoryBuilderApp:
             text="Move Down",
             command=lambda: self._move_storyline_turn(project_folder, 1),
         ).pack(fill=tk.X, pady=5)
+
+        ttk.Separator(storyline_btns, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
+
+        ttk.Button(
+            storyline_btns,
+            text="New Story Folder",
+            command=lambda: self._create_story_folder(project_folder),
+        ).pack(fill=tk.X, pady=5)
+
+        ttk.Button(
+            storyline_btns,
+            text="Select Story Folder",
+            command=lambda: self._select_story_folder(project_folder),
+        ).pack(fill=tk.X, pady=5)
+
+        ttk.Button(
+            storyline_btns,
+            text="Write Story",
+            command=lambda: self._write_story(project_folder),
+        ).pack(fill=tk.X, pady=5)
+
+        story_folder_frame = ttk.Frame(frame_storyline)
+        story_folder_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
+        ttk.Label(story_folder_frame, text="Story folder:").pack(side=tk.LEFT)
+        ttk.Label(
+            story_folder_frame,
+            textvariable=self.story_folder_display_var,
+        ).pack(side=tk.LEFT, padx=5)
 
 
         self._load_storyline(project_folder)
@@ -266,6 +305,10 @@ class StoryBuilderApp:
             return
         self.storyline_state = self.storyline_manager.load(project_folder)
         self.storyline_turns = self.storyline_manager.get_turns(self.storyline_state)
+        if self.story_folder_var:
+            raw_folder = str(self.storyline_state.get("story_folder", "") or "")
+            self.story_folder_var.set(raw_folder)
+            self._update_story_folder_display(project_folder)
         self._refresh_storyline_list()
 
 
@@ -296,9 +339,146 @@ class StoryBuilderApp:
             self.storyline_state,
             self.storyline_turns,
         )
+        self._apply_story_folder_to_state()
         self.storyline_manager.save(project_folder, self.storyline_state)
         if self.logger:
             self.logger.log(f"storyline saved with {len(self.storyline_turns)} turns")
+
+
+    def _apply_story_folder_to_state(self):
+        if self.story_folder_var is None:
+            return
+        folder_value = self.story_folder_var.get().strip()
+        if folder_value:
+            self.storyline_state["story_folder"] = folder_value
+        else:
+            self.storyline_state.pop("story_folder", None)
+
+
+    def _update_story_folder_display(self, project_folder: str):
+        if not self.story_folder_var or not self.story_folder_display_var:
+            return
+        raw_value = self.story_folder_var.get().strip()
+        if not raw_value:
+            self.story_folder_display_var.set("(not set)")
+            return
+        if os.path.isabs(raw_value):
+            display = raw_value
+        else:
+            display = raw_value
+        self.story_folder_display_var.set(display)
+
+
+    def _get_story_folder_path(self, project_folder: str) -> str:
+        if not self.story_folder_var:
+            return ""
+        raw_value = self.story_folder_var.get().strip()
+        if not raw_value:
+            return ""
+        if os.path.isabs(raw_value):
+            return raw_value
+        return os.path.join(project_folder, raw_value)
+
+
+    def _create_story_folder(self, project_folder: str):
+        base_dir = self.project.story_output_dir(project_folder)
+        folder_name = simpledialog.askstring(
+            "New Story Folder", "Enter a name for the story folder:", parent=self.root
+        )
+        if not folder_name:
+            return
+        sanitized = sanitize_project_name(folder_name)
+        if not sanitized:
+            messagebox.showerror("Invalid Name", "Please provide a valid folder name.")
+            return
+        path = os.path.join(base_dir, sanitized)
+        os.makedirs(path, exist_ok=True)
+        relative_path = os.path.relpath(path, project_folder)
+        if self.story_folder_var:
+            self.story_folder_var.set(relative_path)
+            self._apply_story_folder_to_state()
+            self._update_story_folder_display(project_folder)
+            if self.storyline_manager:
+                self.storyline_manager.save(project_folder, self.storyline_state)
+        messagebox.showinfo("Story Folder", f"Story folder ready at {relative_path}.")
+
+
+    def _select_story_folder(self, project_folder: str):
+        initial = self.project.story_output_dir(project_folder)
+        selected = filedialog.askdirectory(
+            title="Select Story Folder", initialdir=initial, mustexist=False
+        )
+        if not selected:
+            return
+        os.makedirs(selected, exist_ok=True)
+        try:
+            relative = os.path.relpath(selected, project_folder)
+        except ValueError:
+            relative = selected
+        if relative.startswith(".."):
+            value = selected
+        else:
+            value = relative
+        if self.story_folder_var:
+            self.story_folder_var.set(value)
+            self._apply_story_folder_to_state()
+            self._update_story_folder_display(project_folder)
+            if self.storyline_manager:
+                self.storyline_manager.save(project_folder, self.storyline_state)
+
+
+    def _write_story(self, project_folder: str):
+        if not self.storyline_manager:
+            return
+        folder_path = self._get_story_folder_path(project_folder)
+        if not folder_path:
+            messagebox.showwarning(
+                "Story Folder Required",
+                "Please create or select a story folder before writing the story.",
+            )
+            return
+        if not self.storyline_turns:
+            messagebox.showinfo("No Storyline", "Add storyline turns before writing a story.")
+            return
+        writer = StoryWriter(
+            self.project,
+            self.storyline_manager,
+            self.autofill,
+            self.logger,
+        )
+        stub_mode_enabled = False
+        try:
+            stub_mode_enabled = bool(self.stub_mode.get()) if self.stub_mode else False
+        except Exception:
+            stub_mode_enabled = False
+        try:
+            story_text = writer.generate_story(
+                project_folder,
+                self.storyline_turns,
+                stub_mode=stub_mode_enabled,
+            )
+        except Exception as exc:  # pragma: no cover - defensive
+            if self.logger:
+                self.logger.log("Failed to generate story: %s", exc)
+            messagebox.showerror(
+                "Generation Failed",
+                "An error occurred while generating the story. See logs for details.",
+            )
+            return
+        if not story_text.strip():
+            messagebox.showwarning(
+                "Empty Story",
+                "The generated story was empty. Please review your storyline and try again.",
+            )
+            return
+
+        os.makedirs(folder_path, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"story_{timestamp}.txt"
+        output_path = os.path.join(folder_path, filename)
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(story_text.strip() + "\n")
+        messagebox.showinfo("Story Saved", f"Story saved to {output_path}.")
 
 
     def _add_storyline_turn(self, project_folder: str):
