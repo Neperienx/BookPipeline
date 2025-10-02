@@ -61,12 +61,16 @@ class Project:
     def clear_template(self, data: Any) -> Any:
         if isinstance(data, dict):
             return {k: self.clear_template(v) for k, v in data.items()}
-        elif isinstance(data, list):
+        if isinstance(data, list):
+            if not data:
+                return []
+            first = data[0]
+            if isinstance(first, dict):
+                return [self.clear_template(first)]
             return []
-        elif isinstance(data, str):
+        if isinstance(data, str):
             return ""
-        else:
-            return ""
+        return ""
 
 
     # --- Story paths ---

@@ -1,68 +1,198 @@
 {
-  "story_preferences": {
-    "setting": {
-      "instruction": "Suggest a creative setting (e.g., medieval fantasy, sci-fi, modern supernatural, or something original).",
-      "max_tokens": 180
+  "world_overview": {
+    "name": {
+      "instruction": "Propose an evocative world name that fits the established themes and tone.",
+      "max_tokens": 32
+    },
+    "genre": {
+      "instruction": "Select or invent a genre label (e.g., medieval fantasy, solar-punk sci-fi, post-apocalyptic mysticism).",
+      "max_tokens": 32
     },
     "themes": {
-      "instruction": "Suggest 2-3 compelling themes for an adventure (e.g., heroic adventure, dark mystery, political intrigue).",
-      "max_tokens": 180
-    },
-    "tone": {
-      "instruction": "Suggest a fitting tone (serious, lighthearted, grimdark, whimsical) for the story.",
-      "max_tokens": 148
-    },
-    "scope": {
-      "instruction": "Suggest whether this should be a short one-shot, episodic campaign, or long epic saga.",
-      "max_tokens": 148
-    },
-    "player_goals": {
-      "instruction": "Suggest 2-3 fun player goals (e.g., solve mysteries, become powerful, build alliances).",
-      "max_tokens": 180
-    }
-  },
-  "world_details": {
-    "magic_level": {
-      "instruction": "Suggest a magic level (low, medium, high) that fits the story.",
-      "max_tokens": 148
-    },
-    "technology_level": {
-      "instruction": "Suggest a technology level (ancient, medieval, steampunk, futuristic) that fits the story.",
-      "max_tokens": 148
-    },
-    "factions": {
-      "instruction": "Suggest 2-3 interesting factions (e.g., kingdoms, guilds, councils) that could exist in the world.",
-      "max_tokens": 196
-    },
-    "special_requests": {
-      "instruction": "Suggest any unique twists, restrictions, or requests that could make the world interesting.",
-      "max_tokens": 196
-    }
-  },
-  "character": {
-    "name": {
-      "instruction": "Suggest a fantasy character name.",
-      "max_tokens": 132
-    },
-    "race": {
-      "instruction": "Suggest a race for the character (e.g., human, elf, dwarf, or something unique).",
-      "max_tokens": 148
-    },
-    "class": {
-      "instruction": "Suggest a fitting class for the character (e.g., fighter, wizard, rogue).",
-      "max_tokens": 148
-    },
-    "background": {
-      "instruction": "Suggest a short backstory for the character.",
+      "instruction": "List 2-3 central themes for the world (e.g., survival, exploration, political intrigue).",
       "max_tokens": 120
     },
-    "motivation": {
-      "instruction": "Suggest a strong motivation for the character.",
-      "max_tokens": 172
+    "tone": {
+      "instruction": "Choose a tone descriptor such as serious, lighthearted, grimdark, whimsical, or a hybrid.",
+      "max_tokens": 24
     },
-    "personality_traits": {
-      "instruction": "Suggest 2-3 personality traits for the character.",
-      "max_tokens": 172
+    "scope": {
+      "instruction": "Describe the narrative scope (intimate/local, regional, epic/global, or cosmic).",
+      "max_tokens": 32
+    },
+    "core_conflict": {
+      "instruction": "Summarize the primary conflict or tension that shapes this world in 1-2 sentences.",
+      "max_tokens": 120
+    }
+  },
+  "cosmology": {
+    "creation_myth": {
+      "instruction": "Outline the world's creation myth or origin story in a few sentences.",
+      "max_tokens": 180
+    },
+    "pantheon_or_belief_systems": {
+      "instruction": "List major deities, religions, or philosophical movements with brief descriptors.",
+      "max_tokens": 196
+    },
+    "planes_or_realms": {
+      "instruction": "List notable planes, realms, or dimensions connected to the world.",
+      "max_tokens": 160
+    },
+    "afterlife_concepts": {
+      "instruction": "Describe how inhabitants view the afterlife or soul journey.",
+      "max_tokens": 120
+    }
+  },
+  "geography": {
+    "world_shape": {
+      "instruction": "Indicate the world's overall shape or structure (flat disc, ringworld, fragmented shards, etc.).",
+      "max_tokens": 32
+    },
+    "continents_or_regions": {
+      "instruction": "List key continents or regions with short flavor descriptors.",
+      "max_tokens": 200
+    },
+    "notable_locations": {
+      "instruction": "Return a JSON array of 3-4 objects with keys name, type, and description highlighting iconic locations.",
+      "max_tokens": 256
+    },
+    "climate_and_ecology": {
+      "instruction": "Summarize the climate patterns, ecosystems, and unusual flora or fauna.",
+      "max_tokens": 180
+    }
+  },
+  "culture_and_society": {
+    "major_cultures": {
+      "instruction": "List major cultures or civilizations with concise descriptions of their identities.",
+      "max_tokens": 200
+    },
+    "languages": {
+      "instruction": "List prevalent languages or dialect families spoken in the world.",
+      "max_tokens": 160
+    },
+    "traditions_or_customs": {
+      "instruction": "Provide notable traditions, rituals, or customs that define the societies.",
+      "max_tokens": 200
+    },
+    "arts_and_entertainment": {
+      "instruction": "Highlight distinctive art forms, performances, or entertainment styles.",
+      "max_tokens": 180
+    },
+    "social_classes_or_castes": {
+      "instruction": "Describe social hierarchies, castes, or class structures.",
+      "max_tokens": 180
+    }
+  },
+  "politics_and_power": {
+    "factions": {
+      "instruction": "Return a JSON array of 3-4 factions with keys name, type, goals, resources, and allies_and_rivals (as an array of names).",
+      "max_tokens": 280
+    },
+    "laws_and_justice": {
+      "instruction": "Explain how laws are created and enforced, noting any unique justice practices.",
+      "max_tokens": 160
+    },
+    "current_conflicts": {
+      "instruction": "List active conflicts, disputes, or tensions shaping current politics.",
+      "max_tokens": 200
+    }
+  },
+  "economy_and_technology": {
+    "technology_level": {
+      "instruction": "Select a technology level descriptor and elaborate briefly (e.g., arcane steampunk, biotech futurism).",
+      "max_tokens": 48
+    },
+    "trade_goods": {
+      "instruction": "List major trade goods or resources the world depends on.",
+      "max_tokens": 180
+    },
+    "currency_system": {
+      "instruction": "Describe the dominant currency systems or barter practices.",
+      "max_tokens": 160
+    },
+    "industry_and_crafts": {
+      "instruction": "List important industries, crafts, or production specialties.",
+      "max_tokens": 200
+    },
+    "transportation": {
+      "instruction": "Explain common transportation methods or travel technologies.",
+      "max_tokens": 160
+    }
+  },
+  "magic_and_supernatural": {
+    "magic_level": {
+      "instruction": "State the magic prevalence (none, low, medium, high) with a short justification.",
+      "max_tokens": 40
+    },
+    "sources_of_power": {
+      "instruction": "Describe the main sources of power (divine, elemental, arcane, psionic, technological, etc.).",
+      "max_tokens": 160
+    },
+    "limitations_or_costs": {
+      "instruction": "List key limitations, risks, or costs associated with wielding magic or supernatural power.",
+      "max_tokens": 200
+    },
+    "magical_organizations": {
+      "instruction": "List groups or orders that control or study the supernatural.",
+      "max_tokens": 200
+    },
+    "supernatural_creatures": {
+      "instruction": "List notable supernatural beings, monsters, or spirits present in the world.",
+      "max_tokens": 200
+    }
+  },
+  "world_flavor": {
+    "common_myths_and_legends": {
+      "instruction": "List myths or legends commonly told by the inhabitants.",
+      "max_tokens": 200
+    },
+    "proverbs_or_sayings": {
+      "instruction": "Provide a few proverbs or sayings that reflect the culture's worldview.",
+      "max_tokens": 160
+    },
+    "festivals_and_holidays": {
+      "instruction": "List important festivals or holidays with brief descriptions.",
+      "max_tokens": 200
+    },
+    "taboos": {
+      "instruction": "List taboos or forbidden behaviors that carry social weight.",
+      "max_tokens": 180
+    },
+    "daily_life": {
+      "instruction": "Describe what daily life feels like for ordinary people.",
+      "max_tokens": 160
+    }
+  },
+  "story_hooks": {
+    "current_events": {
+      "instruction": "List major current events that characters might react to.",
+      "max_tokens": 200
+    },
+    "rumors_and_legends": {
+      "instruction": "Provide rumors or half-truths that could inspire adventures.",
+      "max_tokens": 200
+    },
+    "looming_threats": {
+      "instruction": "List impending threats or ticking time bombs.",
+      "max_tokens": 200
+    },
+    "potential_quests": {
+      "instruction": "Suggest quest hooks or missions adventurers could undertake.",
+      "max_tokens": 200
+    }
+  },
+  "meta": {
+    "special_requests": {
+      "instruction": "Capture any special requests or boundaries the creator specified.",
+      "max_tokens": 160
+    },
+    "inspirations": {
+      "instruction": "List stories, media, or real-world inspirations referenced by the creator.",
+      "max_tokens": 160
+    },
+    "notes": {
+      "instruction": "Add any additional notes or reminders for future world-building sessions.",
+      "max_tokens": 180
     }
   }
 }

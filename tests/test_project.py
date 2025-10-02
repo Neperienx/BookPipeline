@@ -9,12 +9,14 @@ def test_clear_template_and_save_load():
 
     template = {
         "story_preferences": {"setting": "fantasy", "themes": ["magic", "dark"]},
-        "world_details": {"magic_level": "high"}
+        "world_details": {"magic_level": "high"},
+        "politics": {"factions": [{"name": "Guild", "type": "guild"}]},
     }
     cleared = project.clear_template(template)
     assert cleared["story_preferences"]["setting"] == ""
     assert cleared["story_preferences"]["themes"] == []
     assert cleared["world_details"]["magic_level"] == ""
+    assert cleared["politics"]["factions"] == [{"name": "", "type": ""}]
 
     with tempfile.TemporaryDirectory() as tmpdir:
         json_path = os.path.join(tmpdir, "test.json")

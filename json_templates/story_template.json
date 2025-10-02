@@ -1,15 +1,80 @@
 {
-  "story_preferences": {
-    "setting": "Choose one: medieval fantasy | sci-fi | modern supernatural | other",
-    "themes": ["List 1–3 themes, e.g., heroic adventure, dark mystery, political intrigue"],
+  "world_overview": {
+    "name": "",
+    "genre": "Choose one: medieval fantasy | sci-fi | modern supernatural | post-apocalyptic | other",
+    "themes": ["e.g., survival, exploration, political intrigue"],
     "tone": "Choose one: serious | lighthearted | grimdark | whimsical",
-    "scope": "Choose one: short one-shot | episodic campaign | long epic saga",
-    "player_goals": ["List 1–3 goals, e.g., solve mysteries, become powerful, build alliances"]
+    "scope": "Choose one: intimate/local | regional | epic/global | cosmic",
+    "core_conflict": "The main source of tension shaping the world (e.g., war, scarcity, corruption, forbidden magic)."
   },
-  "world_details": {
-    "magic_level": "Choose one: low | medium | high",
-    "technology_level": "Choose one: ancient | medieval | steampunk | futuristic",
-    "factions": ["List some factions, e.g., Kingdom of X, Thieves' Guild, Mage Council"],
-    "special_requests": "Anything specific you want included or avoided (e.g., no undead, moral dilemmas, romance subplot)"
+  "cosmology": {
+    "creation_myth": "",
+    "pantheon_or_belief_systems": [],
+    "planes_or_realms": [],
+    "afterlife_concepts": ""
+  },
+  "geography": {
+    "world_shape": "flat | round | fragmented | other",
+    "continents_or_regions": [],
+    "notable_locations": [
+      {
+        "name": "",
+        "type": "city | kingdom | ruin | natural wonder",
+        "description": ""
+      }
+    ],
+    "climate_and_ecology": ""
+  },
+  "culture_and_society": {
+    "major_cultures": [],
+    "languages": [],
+    "traditions_or_customs": [],
+    "arts_and_entertainment": [],
+    "social_classes_or_castes": []
+  },
+  "politics_and_power": {
+    "factions": [
+      {
+        "name": "",
+        "type": "kingdom | guild | council | megacorp | cult",
+        "goals": "",
+        "resources": "",
+        "allies_and_rivals": []
+      }
+    ],
+    "laws_and_justice": "",
+    "current_conflicts": []
+  },
+  "economy_and_technology": {
+    "technology_level": "ancient | medieval | steampunk | futuristic",
+    "trade_goods": [],
+    "currency_system": "",
+    "industry_and_crafts": [],
+    "transportation": ""
+  },
+  "magic_and_supernatural": {
+    "magic_level": "none | low | medium | high",
+    "sources_of_power": "divine | elemental | arcane | psionic | technological",
+    "limitations_or_costs": [],
+    "magical_organizations": [],
+    "supernatural_creatures": []
+  },
+  "world_flavor": {
+    "common_myths_and_legends": [],
+    "proverbs_or_sayings": [],
+    "festivals_and_holidays": [],
+    "taboos": [],
+    "daily_life": ""
+  },
+  "story_hooks": {
+    "current_events": [],
+    "rumors_and_legends": [],
+    "looming_threats": [],
+    "potential_quests": []
+  },
+  "meta": {
+    "special_requests": "Anything specific to include/avoid (e.g., no undead, romance subplot).",
+    "inspirations": [],
+    "notes": ""
   }
 }
