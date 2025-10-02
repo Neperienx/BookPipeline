@@ -77,6 +77,13 @@ class Project:
     def storyline_path(self, project_folder: str) -> str:
         return os.path.join(project_folder, "Storyline.json")
 
+    def story_output_dir(self, project_folder: str) -> str:
+        """Return the folder where compiled stories should be written."""
+
+        directory = os.path.join(project_folder, "Stories")
+        os.makedirs(directory, exist_ok=True)
+        return directory
+
 
     # --- Characters ---
     def characters_dir(self, project_folder: str) -> str:
