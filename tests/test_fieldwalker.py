@@ -1,4 +1,6 @@
 from story_builder.editor import FieldWalker
+import copy
+
 from story_builder.logger import Logger
 from story_builder.utils import format_field_label
 
@@ -88,13 +90,26 @@ def test_auto_generate_uses_autofill_and_context():
     }
 
     story_context = {"setting": "A floating archipelago in a shattered sky"}
-    walker.auto_generate(data, prompts, user_prompt="a daring skyship captain", story_context=story_context)
+    steps = []
+
+    def on_field(path, root):
+        steps.append((list(path), copy.deepcopy(root)))
+
+    walker.auto_generate(
+        data,
+        prompts,
+        user_prompt="a daring skyship captain",
+        story_context=story_context,
+        on_field_filled=on_field,
+    )
 
     assert data["basic_information"]["name"] == "Captain Lyra Voss"
     assert data["basic_information"]["aliases"] == ["Shade", "The Whispering Gale"]
 
     assert len(autofill.calls) == 2
-    assert "baseline a daring skyship captain" in autofill.calls[0]["prompt"]
+    assert "Creative guidance from the user: a daring skyship captain." in autofill.calls[0]["prompt"]
     expected_path = f"{format_field_label('basic_information')} > {format_field_label('name')}"
     assert expected_path in autofill.calls[0]["prompt"]
     assert autofill.calls[0]["max_tokens"] == 32
+    assert any(path == ["basic_information", "name"] for path, _ in steps)
+    assert any(path == ["basic_information", "aliases"] for path, _ in steps)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import json
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List, Tuple
 
 from .dialogs import DialogRunner
 from .logger import Logger
@@ -12,13 +12,24 @@ class FieldWalker:
     Keeps filled values unless Full Edit Mode is enabled.
     """
 
-    IMPORTANT_CONTEXT_KEYS = {"setting", "themes", "magic_level"}
+    IMPORTANT_CONTEXT_KEYS = {
+        "setting",
+        "themes",
+        "magic_level",
+        "name",
+        "core_conflict",
+        "genre",
+        "tone",
+        "scope",
+    }
 
     def __init__(self, dialog: DialogRunner, full_edit_mode_var, logger: Logger):
         self.dialog = dialog
         self.full_edit_mode_var = full_edit_mode_var
         self.logger = logger
         self._global_context: Dict[str, str] = {}
+        self._current_root: Dict[str, Any] | None = None
+        self._last_progress: Tuple[int, int] | None = None
 
     def _full_edit(self) -> bool:
         try:
@@ -33,7 +44,11 @@ class FieldWalker:
             prompt_data = {}
         self.logger.log(f"FieldWalker.walk: start (full_edit={self._full_edit()})")
         self._global_context = self._gather_global_context(data)
+        self._current_root = data
+        self._last_progress = None
+        self._log_completion_progress(data)
         self._walk_dict(data, prompt_data, title_key=None)
+        self._log_completion_progress(data)
         return data
 
     def auto_generate(
@@ -43,6 +58,7 @@ class FieldWalker:
         *,
         user_prompt: str = "",
         story_context: Dict[str, Any] | None = None,
+        on_field_filled: Callable[[List[str], Dict[str, Any]], None] | None = None,
     ) -> Dict[str, Any]:
         """Automatically populate every field using the Autofill service."""
 
@@ -55,6 +71,9 @@ class FieldWalker:
             prompt_data = {}
 
         self.logger.log("FieldWalker.auto_generate: start")
+        self._current_root = data
+        self._last_progress = None
+        self._log_completion_progress(data)
         self._auto_fill_dict(
             data,
             prompt_data,
@@ -63,7 +82,9 @@ class FieldWalker:
             autofill=autofill,
             user_prompt=user_prompt or "",
             story_context=story_context,
+            on_field_filled=on_field_filled,
         )
+        self._log_completion_progress(data)
         self.logger.log("FieldWalker.auto_generate: complete")
         return data
     
@@ -92,6 +113,8 @@ class FieldWalker:
                 data[key] = filled
             else:
                 data[key] = self._prompt_string(key, str(value), p, data)
+            if self._current_root is not None:
+                self._log_completion_progress(self._current_root)
 
     def _auto_fill_dict(
         self,
@@ -103,6 +126,7 @@ class FieldWalker:
         autofill,
         user_prompt: str,
         story_context: Dict[str, Any],
+        on_field_filled: Callable[[List[str], Dict[str, Any]], None] | None,
     ) -> None:
         for key, value in node.items():
             sub_prompt = prompt_data.get(key, {}) if isinstance(prompt_data, dict) else {}
@@ -119,6 +143,7 @@ class FieldWalker:
                     autofill=autofill,
                     user_prompt=user_prompt,
                     story_context=story_context,
+                    on_field_filled=on_field_filled,
                 )
             elif isinstance(value, list):
                 filled_list = self._auto_fill_list(
@@ -129,8 +154,10 @@ class FieldWalker:
                     autofill,
                     user_prompt,
                     story_context,
+                    on_field_filled,
                 )
                 node[key] = filled_list
+                self._notify_autofill(on_field_filled, current_path, root)
             else:
                 node[key] = self._auto_fill_string(
                     current_path,
@@ -141,6 +168,7 @@ class FieldWalker:
                     user_prompt,
                     story_context,
                 )
+                self._notify_autofill(on_field_filled, current_path, root)
 
 
     def _prompt_string(self, key: str, value: str, p, container: Dict[str, Any]) -> str:
@@ -254,6 +282,7 @@ class FieldWalker:
         autofill,
         user_prompt: str,
         story_context: Dict[str, Any],
+        on_field_filled: Callable[[List[str], Dict[str, Any]], None] | None,
     ) -> list:
         spec = PromptSpec.from_config(prompt_config)
         prompt_text = self._build_auto_prompt(
@@ -264,8 +293,10 @@ class FieldWalker:
             instruction=spec.instruction,
         )
         response = self._call_autofill(autofill, prompt_text, spec)
-        parsed = self._parse_list_response(response)
+        parsed = self._parse_list_response(response, value_list)
         self.logger.log(f"auto fill list -> {'/'.join(path)} = {parsed}")
+        if not parsed:
+            return value_list
         return parsed
 
     def _call_autofill(self, autofill, prompt_text: str, spec: PromptSpec) -> str:
@@ -277,6 +308,20 @@ class FieldWalker:
         except Exception as exc:  # pragma: no cover - safeguard against runtime errors
             self.logger.log(f"Autofill error for prompt: {exc}")
             return ""
+
+    def _notify_autofill(
+        self,
+        callback: Callable[[List[str], Dict[str, Any]], None] | None,
+        path: List[str],
+        root: Dict[str, Any],
+    ) -> None:
+        if callback is not None:
+            try:
+                callback(path, root)
+            except Exception as exc:  # pragma: no cover - defensive logging
+                self.logger.log(f"Autofill progress callback failed: {exc}")
+        if self._current_root is not None:
+            self._log_completion_progress(self._current_root)
 
     def _build_auto_prompt(
         self,
@@ -298,27 +343,39 @@ class FieldWalker:
         if not world_summary:
             world_summary = "No world-building information is currently available."
 
+        root_label = format_field_label(path[0]) if path else "Document"
+
         lines = [
-            f"The user wants to generate a character with this as a baseline {baseline}.",
-            f"Those are the informations that we have so far: {existing_details}.",
-            f"The character will be placed in a story with those premisses: {world_summary}.",
-            f"Right now we want to fill out the information for this category: {category_label}.",
+            f"Creative guidance from the user: {baseline}.",
+            f"Current details recorded in this {root_label.lower()}: {existing_details}.",
+            f"Additional related context (world, story, or character): {world_summary}.",
+            f"Focus exclusively on completing the field: {category_label}.",
         ]
 
         instruction = (instruction or "").strip()
         if instruction:
             lines.append(instruction)
-        lines.append("Come up with content to fill out just this field for this character.")
+        lines.append("Respond with material that fills only this field without duplicating other sections.")
 
         return "\n".join(lines)
 
-    def _parse_list_response(self, response: str) -> list:
+    def _parse_list_response(self, response: str, template_items: list) -> list:
         if not response:
             return []
         response = response.strip()
         try:
             parsed = json.loads(response)
             if isinstance(parsed, list):
+                if template_items and isinstance(template_items[0], dict):
+                    template_keys = list(template_items[0].keys())
+                    cleaned_items = []
+                    for item in parsed:
+                        if isinstance(item, dict):
+                            cleaned_items.append(
+                                {key: str(item.get(key, "")).strip() for key in template_keys}
+                            )
+                    if cleaned_items:
+                        return cleaned_items
                 return [str(item).strip() for item in parsed if str(item).strip()]
         except json.JSONDecodeError:
             pass
@@ -336,6 +393,43 @@ class FieldWalker:
         if not path:
             return ""
         return " > ".join(format_field_label(p) for p in path)
+
+    def _log_completion_progress(self, root: Dict[str, Any]) -> None:
+        total, filled = self._count_completion(root)
+        if total <= 0:
+            return
+        progress_state = (filled, total)
+        if progress_state == self._last_progress:
+            return
+        percent = (filled / total) * 100
+        print(f"[Progress] {filled}/{total} fields filled ({percent:.1f}%).")
+        self._last_progress = progress_state
+
+    def _count_completion(self, node: Any) -> Tuple[int, int]:
+        if isinstance(node, dict):
+            total = 0
+            filled = 0
+            for value in node.values():
+                sub_total, sub_filled = self._count_completion(value)
+                total += sub_total
+                filled += sub_filled
+            return total, filled
+        if isinstance(node, list):
+            if not node:
+                return 1, 0
+            total = 0
+            filled = 0
+            for item in node:
+                sub_total, sub_filled = self._count_completion(item)
+                total += sub_total
+                filled += sub_filled
+            if total == 0:
+                return (1, 1 if node else 0)
+            return total, filled
+        value = "" if node is None else str(node)
+        total = 1
+        filled = 1 if value.strip() else 0
+        return total, filled
 
 
     @staticmethod

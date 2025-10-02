@@ -98,7 +98,16 @@ class StoryBuilderApp:
         # World tab
         frame_world = ttk.Frame(notebook)
         notebook.add(frame_world, text="World & Story")
-        ttk.Button(frame_world, text="Edit World", command=lambda: self._edit_world(project_folder)).pack(padx=20, pady=20)
+        ttk.Button(
+            frame_world,
+            text="Edit World",
+            command=lambda: self._edit_world(project_folder),
+        ).pack(padx=20, pady=(20, 10))
+        ttk.Button(
+            frame_world,
+            text="Autofill World",
+            command=lambda: self._autofill_world(project_folder),
+        ).pack(padx=20, pady=(0, 20))
 
 
         # Characters tab
@@ -240,6 +249,51 @@ class StoryBuilderApp:
         messagebox.showinfo("Saved", f"World for '{os.path.basename(project_folder)}' updated!")
 
 
+    def _autofill_world(self, project_folder: str):
+        if not self.field_walker or not self.autofill:
+            return
+
+        story_path = self.project.story_path(project_folder)
+        if not os.path.exists(story_path):
+            template = self.project.load_template("story_template.json")
+            cleared = self.project.clear_template(template)
+            self.project.save_json(cleared, story_path)
+            if self.logger:
+                self.logger.log("_autofill_world: created Story.json from template")
+
+        data = self.project.read_json(story_path)
+        prompts = self.project.load_prompt_template("story_template_prompt.json")
+
+        user_prompt = simpledialog.askstring(
+            "World Autofill",
+            "Provide creative guidance for the world (optional):",
+        )
+        if user_prompt is None:
+            return
+
+        def save_partial(path: list[str], root_data: dict[str, Any]) -> None:
+            try:
+                self.project.save_json(root_data, story_path)
+            except Exception as exc:  # pragma: no cover - defensive save guard
+                if self.logger:
+                    self.logger.log("_autofill_world: incremental save failed: %s", exc)
+
+        self.field_walker.auto_generate(
+            data,
+            prompts,
+            user_prompt=user_prompt or "",
+            story_context={},
+            on_field_filled=save_partial,
+        )
+        self.project.save_json(data, story_path)
+        if self.logger:
+            self.logger.log("_autofill_world: completed and saved")
+        messagebox.showinfo(
+            "Saved",
+            f"World for '{os.path.basename(project_folder)}' auto-filled!",
+        )
+
+
     def _selected_character(self) -> str | None:
         if not self.listbox.curselection():
             return None
@@ -303,13 +357,22 @@ class StoryBuilderApp:
 
         data = self.project.read_json(char_path)
         prompts = self.project.load_prompt_template("character_template_prompt.json")
-        generated = self.field_walker.auto_generate(
+
+        def save_partial(path: list[str], root_data: dict[str, Any]) -> None:
+            try:
+                self.project.save_json(root_data, char_path)
+            except Exception as exc:  # pragma: no cover - defensive save guard
+                if self.logger:
+                    self.logger.log("_autogenerate_character: incremental save failed: %s", exc)
+
+        self.field_walker.auto_generate(
             data,
             prompts,
             user_prompt=prompt or "",
             story_context=story_context,
+            on_field_filled=save_partial,
         )
-        self.project.save_json(generated, char_path)
+        self.project.save_json(data, char_path)
         if self.logger:
             self.logger.log("_autogenerate_character: saved")
 
