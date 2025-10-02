@@ -115,6 +115,7 @@ class StoryBuilderApp:
 
 
         ttk.Button(btn_frame, text="New", command=lambda: [self._create_character(project_folder), self._refresh_character_list(project_folder)]).pack(fill=tk.X, pady=5)
+        ttk.Button(btn_frame, text="Autogenerate", command=lambda: self._autogenerate_character(project_folder)).pack(fill=tk.X, pady=5)
         ttk.Button(btn_frame, text="Edit", command=lambda: self._edit_character(project_folder)).pack(fill=tk.X, pady=5)
         ttk.Button(btn_frame, text="Delete", command=lambda: self._delete_character(project_folder)).pack(fill=tk.X, pady=5)
 
@@ -263,6 +264,68 @@ class StoryBuilderApp:
 
 
         self._edit_character(project_folder, preselected=name)
+
+
+    def _autogenerate_character(self, project_folder: str):
+        if not self.field_walker:
+            return
+        name = simpledialog.askstring("Autogenerate Character", "Enter character name:")
+        if not name:
+            return
+
+        char_path = self.project.character_path(project_folder, name)
+        if os.path.exists(char_path):
+            overwrite = messagebox.askyesno(
+                "Overwrite Character",
+                f"A character named '{name}' already exists. Overwrite with a new auto-generated profile?",
+            )
+            if not overwrite:
+                return
+
+        template = self.project.load_template("character_template.json")
+        cleared = self.project.clear_template(template)
+        self.project.save_json(cleared, char_path)
+
+        prompt = simpledialog.askstring(
+            "Character Prompt",
+            "Provide a short prompt to guide generation (optional):",
+        )
+        if prompt is None:
+            return
+
+        story_context = {}
+        story_path = self.project.story_path(project_folder)
+        if os.path.exists(story_path):
+            try:
+                story_context = self.project.read_json(story_path)
+            except Exception:
+                story_context = {}
+
+        data = self.project.read_json(char_path)
+        prompts = self.project.load_prompt_template("character_template_prompt.json")
+        generated = self.field_walker.auto_generate(
+            data,
+            prompts,
+            user_prompt=prompt or "",
+            story_context=story_context,
+        )
+        self.project.save_json(generated, char_path)
+        if self.logger:
+            self.logger.log("_autogenerate_character: saved")
+
+        self._refresh_character_list(project_folder)
+        if self.listbox is not None:
+            names = self.listbox.get(0, tk.END)
+            try:
+                index = names.index(name)
+            except ValueError:
+                index = None
+            if index is not None:
+                self.listbox.selection_clear(0, tk.END)
+                self.listbox.selection_set(index)
+                self.listbox.activate(index)
+
+        messagebox.showinfo("Generated", f"Character '{name}' generated!")
 
 
     def _edit_character(self, project_folder: str, preselected: str | None = None):

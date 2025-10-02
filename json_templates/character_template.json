@@ -1,8 +1,119 @@
 {
-  "name": "",
-  "race": "",
-  "class": "",
-  "background": "",
-  "motivation": "",
-  "personality_traits": [""]
+  "basic_information": {
+    "name": "",
+    "aliases": [],
+    "nickname": "",
+    "title": "",
+    "age": "",
+    "date_of_birth": "",
+    "place_of_birth": "",
+    "gender": "",
+    "pronouns": "",
+    "species_or_race": "",
+    "ethnicity_or_clan": "",
+    "nationality_or_origin": "",
+    "current_residence": "",
+    "occupation": "",
+    "social_class": "",
+    "affiliations": [],
+    "religion_or_belief_system": ""
+  },
+  "appearance": {
+    "height": "",
+    "weight": "",
+    "body_type": "",
+    "skin_color": "",
+    "eye_color": "",
+    "hair_color": "",
+    "hair_style": "",
+    "distinguishing_features": [],
+    "clothing_style": "",
+    "weapons_or_tools": [],
+    "magical_marks_or_tattoos": [],
+    "general_aesthetic": ""
+  },
+  "personality": {
+    "mbti_or_type": "",
+    "temperament": "",
+    "core_values": [],
+    "motivations": [],
+    "fears": [],
+    "hobbies": [],
+    "likes": [],
+    "dislikes": [],
+    "quirks": [],
+    "strengths": [],
+    "flaws": [],
+    "morality_alignment": ""
+  },
+  "abilities": {
+    "skills": [],
+    "education_or_training": [],
+    "languages_spoken": [],
+    "magic_or_powers": [],
+    "weapons_proficiency": [],
+    "craftsmanship_or_professions": [],
+    "special_abilities_or_gifts": []
+  },
+  "background": {
+    "family": {
+      "parents": [],
+      "siblings": [],
+      "extended_family": []
+    },
+    "upbringing": "",
+    "childhood_events": [],
+    "formative_experiences": [],
+    "major_life_events": [],
+    "traumas": [],
+    "education_history": "",
+    "career_history": "",
+    "relationships": {
+      "friends": [],
+      "mentors": [],
+      "enemies_or_rivals": [],
+      "romantic_history": []
+    }
+  },
+  "psychological_profile": {
+    "phobias": [],
+    "obsessions": [],
+    "mental_health": "",
+    "coping_mechanisms": [],
+    "worldview": "",
+    "attitude_toward_self": "",
+    "attitude_toward_others": "",
+    "attitude_toward_world": ""
+  },
+  "fantasy_elements": {
+    "magical_affinity": "",
+    "class_or_role": "",
+    "patron_deity_or_entity": "",
+    "curses_or_blessings": [],
+    "artifacts_or_relics": [],
+    "familiars_or_companions": []
+  },
+  "relationships_to_world": {
+    "political_alignment": "",
+    "factions_or_organizations": [],
+    "loyalties": [],
+    "enemies": [],
+    "social_reputation": "",
+    "public_persona_vs_private_self": ""
+  },
+  "story_relevance": {
+    "current_goal": "",
+    "long_term_goal": "",
+    "character_arc": "",
+    "secrets": [],
+    "themes": [],
+    "role_in_story": "",
+    "foreshadowing_elements": []
+  },
+  "meta": {
+    "creator_notes": "",
+    "inspirations": [],
+    "first_appearance": "",
+    "last_updated": ""
+  }
 }

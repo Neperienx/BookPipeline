@@ -1,26 +1,398 @@
 {
-  "name": {
-    "instruction": "Suggest a unique character name",
-    "max_tokens": 132
+  "basic_information": {
+    "name": {
+      "instruction": "Provide a distinctive full name for the character. Respond with a single name only.",
+      "max_tokens": 48
+    },
+    "aliases": {
+      "instruction": "List any aliases or alternative names the character is known by. Respond with a comma-separated list.",
+      "max_tokens": 96
+    },
+    "nickname": {
+      "instruction": "Give a meaningful nickname or sobriquet. Respond with a short phrase.",
+      "max_tokens": 48
+    },
+    "title": {
+      "instruction": "State any formal title or honorific the character carries.",
+      "max_tokens": 60
+    },
+    "age": {
+      "instruction": "Specify the character's age with any necessary qualifiers (e.g., apparent age versus actual age).",
+      "max_tokens": 60
+    },
+    "date_of_birth": {
+      "instruction": "Provide the date of birth. Include calendar or era details if relevant.",
+      "max_tokens": 72
+    },
+    "place_of_birth": {
+      "instruction": "Describe the place of birth with enough detail to set the scene.",
+      "max_tokens": 96
+    },
+    "gender": {
+      "instruction": "Note the character's gender identity.",
+      "max_tokens": 24
+    },
+    "pronouns": {
+      "instruction": "List the pronouns the character prefers, comma-separated.",
+      "max_tokens": 24
+    },
+    "species_or_race": {
+      "instruction": "Identify the character's species or race.",
+      "max_tokens": 36
+    },
+    "ethnicity_or_clan": {
+      "instruction": "Describe the ethnicity, clan, or cultural lineage.",
+      "max_tokens": 72
+    },
+    "nationality_or_origin": {
+      "instruction": "State the nationality or point of origin in the world.",
+      "max_tokens": 60
+    },
+    "current_residence": {
+      "instruction": "Describe where the character currently lives.",
+      "max_tokens": 72
+    },
+    "occupation": {
+      "instruction": "Summarize the character's primary occupation or role in society.",
+      "max_tokens": 60
+    },
+    "social_class": {
+      "instruction": "Identify the character's social class or standing.",
+      "max_tokens": 48
+    },
+    "affiliations": {
+      "instruction": "List important groups, guilds, or factions the character is affiliated with, comma-separated.",
+      "max_tokens": 96
+    },
+    "religion_or_belief_system": {
+      "instruction": "Describe the religion, belief system, or guiding philosophy the character follows.",
+      "max_tokens": 84
+    }
   },
-  "race": {
-    "instruction": "Suggest a fantasy race (Human, Elf, Dwarf, etc.)",
-    "max_tokens": 148
+  "appearance": {
+    "height": {
+      "instruction": "Provide the character's height including units or fantastical equivalents.",
+      "max_tokens": 48
+    },
+    "weight": {
+      "instruction": "State the character's weight with appropriate units or context.",
+      "max_tokens": 48
+    },
+    "body_type": {
+      "instruction": "Describe the overall body type or build.",
+      "max_tokens": 60
+    },
+    "skin_color": {
+      "instruction": "Detail the character's skin color or texture.",
+      "max_tokens": 48
+    },
+    "eye_color": {
+      "instruction": "Describe the character's eyes, including any notable traits.",
+      "max_tokens": 48
+    },
+    "hair_color": {
+      "instruction": "State the primary hair color.",
+      "max_tokens": 36
+    },
+    "hair_style": {
+      "instruction": "Describe the typical hairstyle or grooming.",
+      "max_tokens": 60
+    },
+    "distinguishing_features": {
+      "instruction": "List key distinguishing features such as scars, markings, or posture. Respond with a comma-separated list.",
+      "max_tokens": 96
+    },
+    "clothing_style": {
+      "instruction": "Summarize the character's usual clothing style and notable accessories.",
+      "max_tokens": 96
+    },
+    "weapons_or_tools": {
+      "instruction": "List signature weapons, tools, or equipment, comma-separated.",
+      "max_tokens": 96
+    },
+    "magical_marks_or_tattoos": {
+      "instruction": "Describe any magical marks, tattoos, or sigils. Use a comma-separated list if there are multiple.",
+      "max_tokens": 120
+    },
+    "general_aesthetic": {
+      "instruction": "Provide a short evocative summary of the character's overall aesthetic or vibe.",
+      "max_tokens": 84
+    }
   },
-  "class": {
-    "instruction": "Suggest a character class (Warrior, Mage, Rogue, etc.)",
-    "max_tokens": 148
+  "personality": {
+    "mbti_or_type": {
+      "instruction": "Identify the character's personality archetype, MBTI type, or similar shorthand.",
+      "max_tokens": 48
+    },
+    "temperament": {
+      "instruction": "Describe the prevailing temperament or emotional tone.",
+      "max_tokens": 72
+    },
+    "core_values": {
+      "instruction": "List 3-5 core values the character holds dear. Respond with a comma-separated list.",
+      "max_tokens": 96
+    },
+    "motivations": {
+      "instruction": "List the driving motivations that guide the character. Respond with a comma-separated list.",
+      "max_tokens": 108
+    },
+    "fears": {
+      "instruction": "List the character's most significant fears, comma-separated.",
+      "max_tokens": 96
+    },
+    "hobbies": {
+      "instruction": "List noteworthy hobbies or pastimes, comma-separated.",
+      "max_tokens": 96
+    },
+    "likes": {
+      "instruction": "List things the character enjoys, comma-separated.",
+      "max_tokens": 96
+    },
+    "dislikes": {
+      "instruction": "List things the character dislikes or avoids, comma-separated.",
+      "max_tokens": 96
+    },
+    "quirks": {
+      "instruction": "List memorable quirks or habits, comma-separated.",
+      "max_tokens": 108
+    },
+    "strengths": {
+      "instruction": "List notable strengths or positive traits, comma-separated.",
+      "max_tokens": 108
+    },
+    "flaws": {
+      "instruction": "List important flaws or vulnerabilities, comma-separated.",
+      "max_tokens": 108
+    },
+    "morality_alignment": {
+      "instruction": "State the character's moral alignment or ethical stance in a short phrase.",
+      "max_tokens": 60
+    }
+  },
+  "abilities": {
+    "skills": {
+      "instruction": "List the character's signature skills or talents, comma-separated.",
+      "max_tokens": 120
+    },
+    "education_or_training": {
+      "instruction": "Describe notable education, training, or mentors, comma-separated if multiple.",
+      "max_tokens": 120
+    },
+    "languages_spoken": {
+      "instruction": "List the languages or dialects the character can speak, comma-separated.",
+      "max_tokens": 96
+    },
+    "magic_or_powers": {
+      "instruction": "Summarize magical abilities or supernatural powers. Use a comma-separated list for multiple abilities.",
+      "max_tokens": 132
+    },
+    "weapons_proficiency": {
+      "instruction": "List the weapons or combat styles the character is proficient with, comma-separated.",
+      "max_tokens": 108
+    },
+    "craftsmanship_or_professions": {
+      "instruction": "List any craftsmanship skills, trades, or professions, comma-separated.",
+      "max_tokens": 120
+    },
+    "special_abilities_or_gifts": {
+      "instruction": "Describe rare gifts or unique abilities, comma-separated if multiple.",
+      "max_tokens": 132
+    }
   },
   "background": {
-    "instruction": "Suggest a short backstory",
-    "max_tokens": 120
+    "family": {
+      "parents": {
+        "instruction": "List the parents or parental figures with brief descriptors, comma-separated.",
+        "max_tokens": 132
+      },
+      "siblings": {
+        "instruction": "List siblings or sibling-like figures, comma-separated.",
+        "max_tokens": 132
+      },
+      "extended_family": {
+        "instruction": "List important extended family members, comma-separated.",
+        "max_tokens": 132
+      }
+    },
+    "upbringing": {
+      "instruction": "Describe the character's upbringing and formative environment in a few sentences.",
+      "max_tokens": 180
+    },
+    "childhood_events": {
+      "instruction": "List pivotal childhood events, comma-separated.",
+      "max_tokens": 132
+    },
+    "formative_experiences": {
+      "instruction": "List defining formative experiences, comma-separated.",
+      "max_tokens": 132
+    },
+    "major_life_events": {
+      "instruction": "List major life events or turning points, comma-separated.",
+      "max_tokens": 144
+    },
+    "traumas": {
+      "instruction": "List significant traumas or unresolved wounds, comma-separated.",
+      "max_tokens": 132
+    },
+    "education_history": {
+      "instruction": "Summarize the character's education history.",
+      "max_tokens": 132
+    },
+    "career_history": {
+      "instruction": "Summarize the character's career history or major roles held.",
+      "max_tokens": 144
+    },
+    "relationships": {
+      "friends": {
+        "instruction": "List close friends or allies, comma-separated.",
+        "max_tokens": 120
+      },
+      "mentors": {
+        "instruction": "List mentors or guides, comma-separated.",
+        "max_tokens": 120
+      },
+      "enemies_or_rivals": {
+        "instruction": "List enemies or rivals, comma-separated.",
+        "max_tokens": 132
+      },
+      "romantic_history": {
+        "instruction": "Summarize key romantic relationships or history in a comma-separated list.",
+        "max_tokens": 144
+      }
+    }
   },
-  "motivation": {
-    "instruction": "Suggest what drives this character",
-    "max_tokens": 172
+  "psychological_profile": {
+    "phobias": {
+      "instruction": "List the character's phobias, comma-separated.",
+      "max_tokens": 108
+    },
+    "obsessions": {
+      "instruction": "List obsessions or fixations, comma-separated.",
+      "max_tokens": 108
+    },
+    "mental_health": {
+      "instruction": "Describe the character's mental health status or diagnoses in a short paragraph.",
+      "max_tokens": 156
+    },
+    "coping_mechanisms": {
+      "instruction": "List coping mechanisms or strategies, comma-separated.",
+      "max_tokens": 120
+    },
+    "worldview": {
+      "instruction": "Summarize the character's worldview or philosophy in 1-2 sentences.",
+      "max_tokens": 156
+    },
+    "attitude_toward_self": {
+      "instruction": "Describe how the character views themselves.",
+      "max_tokens": 132
+    },
+    "attitude_toward_others": {
+      "instruction": "Describe how the character treats or perceives others.",
+      "max_tokens": 132
+    },
+    "attitude_toward_world": {
+      "instruction": "Describe the character's attitude toward the broader world or society.",
+      "max_tokens": 132
+    }
   },
-  "personality_traits": {
-    "instruction": "Suggest 2-3 personality traits",
-    "max_tokens": 172
+  "fantasy_elements": {
+    "magical_affinity": {
+      "instruction": "Describe the character's connection to magic or supernatural forces.",
+      "max_tokens": 132
+    },
+    "class_or_role": {
+      "instruction": "State the fantasy class, archetype, or role the character embodies.",
+      "max_tokens": 72
+    },
+    "patron_deity_or_entity": {
+      "instruction": "Identify any patron deity, entity, or higher power the character serves.",
+      "max_tokens": 120
+    },
+    "curses_or_blessings": {
+      "instruction": "List notable curses or blessings affecting the character, comma-separated.",
+      "max_tokens": 132
+    },
+    "artifacts_or_relics": {
+      "instruction": "List signature artifacts or relics tied to the character, comma-separated.",
+      "max_tokens": 132
+    },
+    "familiars_or_companions": {
+      "instruction": "List familiars, summoned companions, or bonded creatures, comma-separated.",
+      "max_tokens": 132
+    }
+  },
+  "relationships_to_world": {
+    "political_alignment": {
+      "instruction": "Describe the political alignment or ideology the character supports.",
+      "max_tokens": 132
+    },
+    "factions_or_organizations": {
+      "instruction": "List key factions or organizations tied to the character, comma-separated.",
+      "max_tokens": 132
+    },
+    "loyalties": {
+      "instruction": "List the character's primary loyalties, comma-separated.",
+      "max_tokens": 120
+    },
+    "enemies": {
+      "instruction": "List major enemies or opposing forces, comma-separated.",
+      "max_tokens": 132
+    },
+    "social_reputation": {
+      "instruction": "Describe the character's reputation within society.",
+      "max_tokens": 132
+    },
+    "public_persona_vs_private_self": {
+      "instruction": "Contrast the public persona with the private self in a short paragraph.",
+      "max_tokens": 180
+    }
+  },
+  "story_relevance": {
+    "current_goal": {
+      "instruction": "State the character's immediate goal or objective.",
+      "max_tokens": 108
+    },
+    "long_term_goal": {
+      "instruction": "Describe the long-term goal or destiny the character pursues.",
+      "max_tokens": 132
+    },
+    "character_arc": {
+      "instruction": "Summarize the intended character arc in a few sentences.",
+      "max_tokens": 180
+    },
+    "secrets": {
+      "instruction": "List secrets the character guards, comma-separated.",
+      "max_tokens": 120
+    },
+    "themes": {
+      "instruction": "List themes the character explores or embodies, comma-separated.",
+      "max_tokens": 120
+    },
+    "role_in_story": {
+      "instruction": "Explain the character's narrative role (e.g., mentor, protagonist, antagonist).",
+      "max_tokens": 132
+    },
+    "foreshadowing_elements": {
+      "instruction": "List elements that foreshadow future developments involving this character, comma-separated.",
+      "max_tokens": 132
+    }
+  },
+  "meta": {
+    "creator_notes": {
+      "instruction": "Provide any creator-facing notes or reminders about this character in a few sentences.",
+      "max_tokens": 180
+    },
+    "inspirations": {
+      "instruction": "List inspirations or reference works that influenced this character, comma-separated.",
+      "max_tokens": 120
+    },
+    "first_appearance": {
+      "instruction": "State when or where the character first appears in the story.",
+      "max_tokens": 108
+    },
+    "last_updated": {
+      "instruction": "Provide the date of the most recent update or revision for this profile.",
+      "max_tokens": 60
+    }
   }
 }

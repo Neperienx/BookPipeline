@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Any, Dict
+import json
+from typing import Any, Dict, List
 
 from .dialogs import DialogRunner
 from .logger import Logger
@@ -34,6 +35,37 @@ class FieldWalker:
         self._global_context = self._gather_global_context(data)
         self._walk_dict(data, prompt_data, title_key=None)
         return data
+
+    def auto_generate(
+        self,
+        data: Dict[str, Any],
+        prompt_data: Dict[str, Any],
+        *,
+        user_prompt: str = "",
+        story_context: Dict[str, Any] | None = None,
+    ) -> Dict[str, Any]:
+        """Automatically populate every field using the Autofill service."""
+
+        autofill = getattr(self.dialog, "autofill", None)
+        if autofill is None:
+            raise RuntimeError("Autofill service is required for auto generation")
+
+        story_context = story_context or {}
+        if not isinstance(prompt_data, dict):
+            prompt_data = {}
+
+        self.logger.log("FieldWalker.auto_generate: start")
+        self._auto_fill_dict(
+            data,
+            prompt_data,
+            path=[],
+            root=data,
+            autofill=autofill,
+            user_prompt=user_prompt or "",
+            story_context=story_context,
+        )
+        self.logger.log("FieldWalker.auto_generate: complete")
+        return data
     
     def _walk_dict(self, data: Dict[str, Any], prompt_data: Dict[str, Any], title_key: str | None):
         for key, value in list(data.items()):
@@ -60,6 +92,55 @@ class FieldWalker:
                 data[key] = filled
             else:
                 data[key] = self._prompt_string(key, str(value), p, data)
+
+    def _auto_fill_dict(
+        self,
+        node: Dict[str, Any],
+        prompt_data: Dict[str, Any],
+        *,
+        path: List[str],
+        root: Dict[str, Any],
+        autofill,
+        user_prompt: str,
+        story_context: Dict[str, Any],
+    ) -> None:
+        for key, value in node.items():
+            sub_prompt = prompt_data.get(key, {}) if isinstance(prompt_data, dict) else {}
+            current_path = path + [key]
+
+            if isinstance(value, dict):
+                if not isinstance(sub_prompt, dict):
+                    sub_prompt = {}
+                self._auto_fill_dict(
+                    value,
+                    sub_prompt,
+                    path=current_path,
+                    root=root,
+                    autofill=autofill,
+                    user_prompt=user_prompt,
+                    story_context=story_context,
+                )
+            elif isinstance(value, list):
+                filled_list = self._auto_fill_list(
+                    current_path,
+                    value,
+                    sub_prompt,
+                    root,
+                    autofill,
+                    user_prompt,
+                    story_context,
+                )
+                node[key] = filled_list
+            else:
+                node[key] = self._auto_fill_string(
+                    current_path,
+                    str(value),
+                    sub_prompt,
+                    root,
+                    autofill,
+                    user_prompt,
+                    story_context,
+                )
 
 
     def _prompt_string(self, key: str, value: str, p, container: Dict[str, Any]) -> str:
@@ -140,6 +221,121 @@ class FieldWalker:
                 return new_list
 
         return new_list
+
+    def _auto_fill_string(
+        self,
+        path: List[str],
+        value: str,
+        prompt_config,
+        root: Dict[str, Any],
+        autofill,
+        user_prompt: str,
+        story_context: Dict[str, Any],
+    ) -> str:
+        spec = PromptSpec.from_config(prompt_config)
+        prompt_text = self._build_auto_prompt(
+            path,
+            root,
+            user_prompt=user_prompt,
+            story_context=story_context,
+            instruction=spec.instruction,
+        )
+        response = self._call_autofill(autofill, prompt_text, spec)
+        filled = (response or value or "").strip()
+        self.logger.log(f"auto fill string -> {'/'.join(path)} = {filled!r}")
+        return filled
+
+    def _auto_fill_list(
+        self,
+        path: List[str],
+        value_list: list,
+        prompt_config,
+        root: Dict[str, Any],
+        autofill,
+        user_prompt: str,
+        story_context: Dict[str, Any],
+    ) -> list:
+        spec = PromptSpec.from_config(prompt_config)
+        prompt_text = self._build_auto_prompt(
+            path,
+            root,
+            user_prompt=user_prompt,
+            story_context=story_context,
+            instruction=spec.instruction,
+        )
+        response = self._call_autofill(autofill, prompt_text, spec)
+        parsed = self._parse_list_response(response)
+        self.logger.log(f"auto fill list -> {'/'.join(path)} = {parsed}")
+        return parsed
+
+    def _call_autofill(self, autofill, prompt_text: str, spec: PromptSpec) -> str:
+        max_tokens = spec.max_tokens
+        try:
+            if max_tokens is not None:
+                return autofill.generate(prompt_text, max_tokens=max_tokens)
+            return autofill.generate(prompt_text)
+        except Exception as exc:  # pragma: no cover - safeguard against runtime errors
+            self.logger.log(f"Autofill error for prompt: {exc}")
+            return ""
+
+    def _build_auto_prompt(
+        self,
+        path: List[str],
+        root: Dict[str, Any],
+        *,
+        user_prompt: str,
+        story_context: Dict[str, Any],
+        instruction: str,
+    ) -> str:
+        category_label = self._path_label(path)
+        baseline = user_prompt.strip()
+        if not baseline:
+            baseline = "No additional creative guidance was provided."
+        existing_details = summarize_value_for_prompt(root).strip()
+        if not existing_details:
+            existing_details = "No details have been established yet."
+        world_summary = summarize_value_for_prompt(story_context).strip()
+        if not world_summary:
+            world_summary = "No world-building information is currently available."
+
+        lines = [
+            f"The user wants to generate a character with this as a baseline {baseline}.",
+            f"Those are the informations that we have so far: {existing_details}.",
+            f"The character will be placed in a story with those premisses: {world_summary}.",
+            f"Right now we want to fill out the information for this category: {category_label}.",
+        ]
+
+        instruction = (instruction or "").strip()
+        if instruction:
+            lines.append(instruction)
+        lines.append("Come up with content to fill out just this field for this character.")
+
+        return "\n".join(lines)
+
+    def _parse_list_response(self, response: str) -> list:
+        if not response:
+            return []
+        response = response.strip()
+        try:
+            parsed = json.loads(response)
+            if isinstance(parsed, list):
+                return [str(item).strip() for item in parsed if str(item).strip()]
+        except json.JSONDecodeError:
+            pass
+
+        items: List[str] = []
+        for raw in response.replace("\r", "\n").split("\n"):
+            parts = [p.strip() for p in raw.split(",")]
+            for part in parts:
+                cleaned = part.strip().lstrip("-•*").strip()
+                if cleaned:
+                    items.append(cleaned)
+        return items
+
+    def _path_label(self, path: List[str]) -> str:
+        if not path:
+            return ""
+        return " > ".join(format_field_label(p) for p in path)
 
 
     @staticmethod
