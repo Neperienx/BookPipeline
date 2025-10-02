@@ -54,8 +54,8 @@ def test_storyline_prompt_helpers(tmp_path):
     first_instruction = manager.instruction_for_turn(0)
     fallback_instruction = manager.instruction_for_turn(10)
 
-    assert "hook" in first_instruction.lower()
-    assert "storyline" in fallback_instruction.lower()
+    assert "hook" in first_instruction.instruction.lower()
+    assert "storyline" in fallback_instruction.instruction.lower()
 
     project_folder = os.path.join(paths.projects_root, "demo")
     os.makedirs(project.characters_dir(project_folder), exist_ok=True)

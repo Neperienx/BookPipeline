@@ -20,7 +20,15 @@ class CaptureDialog:
         self.exit_early = False
         self.calls = []
 
-    def ask_field(self, title, key, suggestion, prompt_instruction=None, context=None):
+    def ask_field(
+        self,
+        title,
+        key,
+        suggestion,
+        prompt_instruction=None,
+        context=None,
+        prompt_spec=None,
+    ):
         self.calls.append(
             {
                 "title": title,
@@ -28,6 +36,7 @@ class CaptureDialog:
                 "suggestion": suggestion,
                 "prompt_instruction": prompt_instruction,
                 "context": context,
+                "prompt_spec": prompt_spec,
             }
         )
         try:

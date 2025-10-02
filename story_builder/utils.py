@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Optional
 
 
 def sanitize_project_name(name: str) -> str:
@@ -41,3 +42,41 @@ def summarize_value_for_prompt(value: Any) -> str:
                 segments.append(f"{format_field_label(str(key))}: {summary}")
         return "; ".join(segments)
     return str(value)
+
+
+@dataclass(frozen=True)
+class PromptSpec:
+    """Normalized prompt metadata shared between the UI and text generator."""
+
+    instruction: str = ""
+    max_tokens: Optional[int] = None
+
+    @classmethod
+    def from_config(cls, config: Any) -> "PromptSpec":
+        """Create a :class:`PromptSpec` from raw JSON template data.
+
+        The templates may store prompts as plain strings (legacy behaviour) or as
+        objects containing additional metadata such as ``max_tokens``.  This
+        helper normalizes both representations.
+        """
+
+        if isinstance(config, cls):
+            return config
+
+        instruction = ""
+        max_tokens: Optional[int] = None
+
+        if isinstance(config, dict):
+            raw_instruction = config.get("instruction")
+            if not isinstance(raw_instruction, str):
+                raw_instruction = config.get("prompt") or config.get("text") or ""
+            instruction = raw_instruction.strip()
+
+            raw_tokens = config.get("max_tokens")
+            if isinstance(raw_tokens, int) and raw_tokens > 0:
+                max_tokens = raw_tokens
+        elif isinstance(config, str):
+            instruction = config.strip()
+
+        return cls(instruction=instruction, max_tokens=max_tokens)
+

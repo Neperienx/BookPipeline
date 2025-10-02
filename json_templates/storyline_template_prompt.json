@@ -1,10 +1,28 @@
 {
-  "default_instruction": "Write the next major beat of the storyline in 2-4 sentences. Focus on strong player hooks, escalating stakes, and vivid sensory details.",
+  "default_instruction": {
+    "instruction": "Write the next major beat of the storyline in 2-4 sentences. Focus on strong player hooks, escalating stakes, and vivid sensory details.",
+    "max_tokens": 200
+  },
   "turn_instructions": [
-    "Establish the campaign hook, location, and initial conflict that draws the heroes together.",
-    "Introduce the primary antagonist or obstacle that complicates the heroes' goals.",
-    "Describe a turning point that raises the stakes and reveals hidden information.",
-    "Outline the climactic showdown or challenge and the consequences of success or failure.",
-    "Suggest an epilogue beat that teases future adventures or unresolved threads."
+    {
+      "instruction": "Establish the campaign hook, location, and initial conflict that draws the heroes together.",
+      "max_tokens": 180
+    },
+    {
+      "instruction": "Introduce the primary antagonist or obstacle that complicates the heroes' goals.",
+      "max_tokens": 180
+    },
+    {
+      "instruction": "Describe a turning point that raises the stakes and reveals hidden information.",
+      "max_tokens": 180
+    },
+    {
+      "instruction": "Outline the climactic showdown or challenge and the consequences of success or failure.",
+      "max_tokens": 200
+    },
+    {
+      "instruction": "Suggest an epilogue beat that teases future adventures or unresolved threads.",
+      "max_tokens": 180
+    }
   ]
 }

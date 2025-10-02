@@ -490,7 +490,8 @@ class StoryBuilderApp:
             return
         self.dialog_runner.exit_early = False
         index = len(self.storyline_turns)
-        instruction = self.storyline_manager.instruction_for_turn(index)
+        instruction_spec = self.storyline_manager.instruction_for_turn(index)
+        instruction = instruction_spec.instruction
         base_context = self.storyline_manager.build_prompt_context(
             project_folder, self.storyline_turns
         )
@@ -531,6 +532,7 @@ class StoryBuilderApp:
             suggestion="",
             prompt_instruction=instruction,
             context=gm_context,
+            prompt_spec=instruction_spec,
         )
         if self.dialog_runner.exit_early:
             self.dialog_runner.exit_early = False
@@ -626,7 +628,8 @@ class StoryBuilderApp:
             return
 
         index = len(self.storyline_turns)
-        instruction = self.storyline_manager.instruction_for_turn(index)
+        instruction_spec = self.storyline_manager.instruction_for_turn(index)
+        instruction = instruction_spec.instruction
         base_context = self.storyline_manager.build_prompt_context(
             project_folder, self.storyline_turns
         )
@@ -665,7 +668,12 @@ class StoryBuilderApp:
             instruction=instruction,
             context=gm_context,
         )
-        gm_summary = self.autofill.generate(gm_prompt).strip()
+        if instruction_spec.max_tokens is not None:
+            gm_summary = self.autofill.generate(
+                gm_prompt, max_tokens=instruction_spec.max_tokens
+            ).strip()
+        else:
+            gm_summary = self.autofill.generate(gm_prompt).strip()
         if not gm_summary:
             return
 
@@ -743,7 +751,8 @@ class StoryBuilderApp:
         if index is None or index >= len(self.storyline_turns):
             return
         current = self.storyline_turns[index]
-        instruction = self.storyline_manager.instruction_for_turn(index)
+        instruction_spec = self.storyline_manager.instruction_for_turn(index)
+        instruction = instruction_spec.instruction
         context = self.storyline_manager.build_prompt_context(project_folder, self.storyline_turns)
         updated = self.dialog_runner.ask_field(
             title=f"Edit Storyline Turn {index + 1}",
@@ -751,6 +760,7 @@ class StoryBuilderApp:
             suggestion=current.get("content", ""),
             prompt_instruction=instruction,
             context=context,
+            prompt_spec=instruction_spec,
         )
         self.storyline_turns[index]["content"] = updated.strip()
         self._persist_storyline(project_folder)
