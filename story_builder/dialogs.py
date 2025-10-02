@@ -5,7 +5,7 @@ from typing import Dict, Optional
 
 from .autofill import AutofillService
 from .logger import Logger
-from .utils import format_field_label, summarize_value_for_prompt
+from .utils import format_field_label, summarize_value_for_prompt, PromptSpec
 
 
 class DialogRunner:
@@ -23,6 +23,7 @@ class DialogRunner:
         suggestion: Optional[str],
         prompt_instruction: Optional[str] = None,
         context: Optional[Dict[str, object]] = None,
+        prompt_spec: Optional[PromptSpec] = None,
     ) -> str:
         if suggestion is None:
             suggestion = ""
@@ -31,7 +32,9 @@ class DialogRunner:
         dialog = tk.Toplevel(self.root)
         dialog.title(title)
 
-        prompt_instruction = prompt_instruction or ""
+        spec_instruction = prompt_spec.instruction if prompt_spec else ""
+        prompt_instruction = (prompt_instruction or spec_instruction or "").strip()
+        max_tokens = prompt_spec.max_tokens if prompt_spec else None
         context = context or {}
 
 
@@ -73,7 +76,10 @@ class DialogRunner:
                 instruction=prompt_instruction,
                 context=context,
             )
-            val = self.autofill.generate(prompt)
+            if max_tokens is not None:
+                val = self.autofill.generate(prompt, max_tokens=max_tokens)
+            else:
+                val = self.autofill.generate(prompt)
             entry.delete(0, tk.END)
             entry.insert(0, val)
             self.logger.log(f"ask_field AUTOFILL -> {key} = {val!r}")

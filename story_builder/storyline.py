@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 
 from .project import Project
 from .logger import Logger
-from .utils import summarize_value_for_prompt, format_field_label
+from .utils import summarize_value_for_prompt, format_field_label, PromptSpec
 
 
 class StorylineManager:
@@ -90,17 +90,20 @@ class StorylineManager:
         return data
 
     # --- Prompt helpers ---
-    def instruction_for_turn(self, index: int) -> str:
+    def instruction_for_turn(self, index: int) -> PromptSpec:
         config = self.prompt_config or {}
+
         instructions = config.get("turn_instructions")
         if isinstance(instructions, list) and index < len(instructions):
-            candidate = instructions[index]
-            if isinstance(candidate, str) and candidate.strip():
-                return candidate.strip()
-        default = config.get("default_instruction")
-        if isinstance(default, str) and default.strip():
-            return default.strip()
-        return self.DEFAULT_INSTRUCTION
+            candidate = PromptSpec.from_config(instructions[index])
+            if candidate.instruction:
+                return candidate
+
+        default_spec = PromptSpec.from_config(config.get("default_instruction"))
+        if default_spec.instruction:
+            return default_spec
+
+        return PromptSpec(self.DEFAULT_INSTRUCTION)
 
     def build_prompt_context(
         self,

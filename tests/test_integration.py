@@ -82,7 +82,7 @@ def test_edit_world_manual_and_autofill():
     # First field returns "test", second field comes from stub autofill
     responses = iter(["test"])
     app.dialog_runner.ask_field = lambda *a, **k: next(responses, app.autofill.generate("tone"))
-    app.autofill.generate = lambda prompt: "ABCD"
+    app.autofill.generate = lambda prompt, **kwargs: "ABCD"
 
     app._edit_world(folder)
 
@@ -127,7 +127,7 @@ def test_edit_character_manual_and_autofill():
     # First response = "heroic", then stub autofill
     responses = iter(["heroic"])
     app.dialog_runner.ask_field = lambda *a, **k: next(responses, app.autofill.generate("role"))
-    app.autofill.generate = lambda prompt: "WXYZ"
+    app.autofill.generate = lambda prompt, **kwargs: "WXYZ"
 
     app._edit_character(folder, preselected="test_character")
 
@@ -189,7 +189,7 @@ def test_autofill_storyline_turn():
         "Villain outcome",
         "Villain reflection",
     ])
-    app.autofill.generate = lambda prompt: next(responses)
+    app.autofill.generate = lambda prompt, **kwargs: next(responses)
 
     app._autofill_storyline_turn(folder)
 

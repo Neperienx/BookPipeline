@@ -3,7 +3,7 @@ from typing import Any, Dict
 
 from .dialogs import DialogRunner
 from .logger import Logger
-from .utils import format_field_label, summarize_value_for_prompt
+from .utils import format_field_label, summarize_value_for_prompt, PromptSpec
 
 
 class FieldWalker:
@@ -63,14 +63,16 @@ class FieldWalker:
 
 
     def _prompt_string(self, key: str, value: str, p, container: Dict[str, Any]) -> str:
+        spec = PromptSpec.from_config(p)
         if value.strip() == "" or self._full_edit():
-            instruction = p if isinstance(p, str) else ""
+            instruction = spec.instruction
             context = self._context_snapshot(container, exclude_key=key)
             user_input = self.dialog.ask_field(
                 self._title(key),
                 key,
                 value,
                 prompt_instruction=instruction,
+                prompt_spec=spec,
                 context=context,
             )
             self.logger.log(f"string filled -> {key} = {user_input!r}")
@@ -81,7 +83,8 @@ class FieldWalker:
 
 
     def _prompt_list(self, key: str, value_list: list, p, container: Dict[str, Any]) -> list:
-        instruction = p if isinstance(p, str) else ""
+        spec = PromptSpec.from_config(p)
+        instruction = spec.instruction
         context = self._context_snapshot(container, exclude_key=key)
         if not value_list or self._full_edit():
             placeholder = instruction or f"Enter values for {format_field_label(key)}, comma-separated"
@@ -90,6 +93,7 @@ class FieldWalker:
                 key,
                 "",
                 prompt_instruction=placeholder,
+                prompt_spec=spec,
                 context=context,
             )
             new = [x.strip() for x in user_input.split(",") if x.strip()] if user_input else []
@@ -110,6 +114,7 @@ class FieldWalker:
                         f"{key}[{idx}]",
                         v,
                         prompt_instruction=instruction,
+                        prompt_spec=spec,
                         context=item_context,
                     )
                     self.logger.log(f"list item filled -> {key}[{idx}] = {user_input!r}")
@@ -128,6 +133,7 @@ class FieldWalker:
                     f"{key}[{idx}]",
                     str(v),
                     prompt_instruction=instruction,
+                    prompt_spec=spec,
                     context=item_context,
                 )
                 new_list.append(user_input or "")

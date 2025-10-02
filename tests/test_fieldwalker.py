@@ -7,13 +7,22 @@ class DummyDialog:
         self.exit_early = False
         self.captured = []
 
-    def ask_field(self, title, key, suggestion, prompt_instruction=None, context=None):
+    def ask_field(
+        self,
+        title,
+        key,
+        suggestion,
+        prompt_instruction=None,
+        context=None,
+        prompt_spec=None,
+    ):
         self.captured.append({
             "title": title,
             "key": key,
             "suggestion": suggestion,
             "prompt_instruction": prompt_instruction,
             "context": context,
+            "prompt_spec": prompt_spec,
         })
         try:
             return next(self.responses)
